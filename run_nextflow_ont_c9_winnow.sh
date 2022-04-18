@@ -5,7 +5,7 @@ workflow_path='/hpc/diaggen/software/development/NextflowONT'
 
 # Set input and output dirs
 input_fastq=`realpath -e $1`
-input_fast5= `realpath -e $2`
+input_fast5=`realpath -e $2`
 output=`realpath $3`
 email=$4
 roi=`realpath $5`
