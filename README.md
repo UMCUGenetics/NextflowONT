@@ -14,6 +14,6 @@ curl -s https://get.nextflow.io | bash
 
 #### Running ONT workflow
 ```bash
-nextflow run ONT.nf -c ONT.config --fastq_path <fastq_dir_path> --outdir <output_dir_path> --email <email> --roi <BED file of ROI> [-profile slurm|mac]
+nextflow run ONT.nf -c ONT.config --fastq_path <fastq_dir_path> --outdir <output_dir_path> --email <email> --sample_id <sample_id> --roi <roi> [-profile slurm|mac]
 ```
 
