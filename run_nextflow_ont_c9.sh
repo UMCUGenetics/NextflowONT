@@ -6,9 +6,9 @@ workflow_path='/hpc/diaggen/software/development/NextflowONT'
 # Set input and output dirs
 input_fastq=`realpath -e $1`
 input_fast5=`realpath -e $2`
-output=`realpath $3`
+output=$3
 email=$4
-roi=`realpath $5`
+roi=$5
 
 mkdir -p $output && cd $output
 mkdir -p log
@@ -49,7 +49,7 @@ if [ \$? -eq 0 ]; then
     #  find work -type f | egrep "\.(command|exitcode)" | zip -@ -q work.zip
 
     #  echo "Remove work directory"
-    #  rm -r worki
+    #  rm -r work
 
     #  echo "Creating md5sum"
     #  find -type f -not -iname 'md5sum.txt' -exec md5sum {} \; > md5sum.txt
