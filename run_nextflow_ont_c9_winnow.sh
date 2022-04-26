@@ -6,9 +6,9 @@ workflow_path='/hpc/diaggen/software/development/NextflowONT'
 # Set input and output dirs
 input_fastq=`realpath -e $1`
 input_fast5=`realpath -e $2`
-output=`realpath $3`
+output=$3
 email=$4
-roi=`realpath $5`
+roi=$5
 
 mkdir -p $output && cd $output
 mkdir -p log
@@ -20,8 +20,8 @@ sbatch <<EOT
 #!/bin/bash
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --mem 5G
-#SBATCH --gres=tmpspace:10G
+#SBATCH --mem 24G
+#SBATCH --gres=tmpspace:24G
 #SBATCH --job-name Nextflow_ONT
 #SBATCH -o log/slurm_nextflow_ont.%j.out
 #SBATCH -e log/slurm_nextflow_ont.%j.err
