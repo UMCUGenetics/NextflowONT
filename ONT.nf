@@ -95,7 +95,8 @@ workflow {
     STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
     STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
 
-    // ## Publish different input file here? 
+    //Save Input files
+    SaveInputFile(params.roi)
 
     // Create log files: Repository versions and Workflow params
     VersionLog()
@@ -149,6 +150,23 @@ process ConcatFofn{
         //println fofn_files[0]
         """
         cat ${fofn} > ${sample_id}.fofn
+        """
+}
+
+process SaveInputFile {
+    tag {"SaveInputFile ${analysis_id}"}
+    label 'SaveInputFile'
+    shell = ['/bin/bash', '-euo', 'pipefail']
+    cache = false  //Disable cache to force a new files to be copied.
+  
+    input:
+       path(roi)
+ 
+    output:
+       path(roi)
+
+    script:
+        """
         """
 }
 
