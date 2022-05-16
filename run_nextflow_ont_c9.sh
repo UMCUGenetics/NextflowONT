@@ -4,11 +4,11 @@ set -euo pipefail
 workflow_path='/hpc/diaggen/software/development/NextflowONT'
 
 # Set input and output dirs
-input_fastq=`realpath -e $1`
-input_fast5=`realpath -e $2`
-output=$3
-email=$4
-roi=$5
+input_fast5=`realpath -e $1`
+output=$2
+email=$3
+roi=$4
+sample_id=$5
 
 mkdir -p $output && cd $output
 mkdir -p log
@@ -34,11 +34,11 @@ module load Java/1.8.0_60
 
 /hpc/diaggen/software/tools/nextflow run $workflow_path/ONT.nf \
 -c $workflow_path/ONT.config \
---fastq_path $input_fastq \
 --fast5_path $input_fast5 \
 --outdir $output \
 --email $email \
 --roi $roi \
+--sample_id $sample_id \
 -profile slurm \
 -resume -ansi-log false
 
