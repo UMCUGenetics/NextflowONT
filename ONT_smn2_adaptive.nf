@@ -76,26 +76,6 @@ process ReBasecallingGuppy{
         """
 }
 
-process Split_BAM{
-    // Custom process split BAM on (Cas9) start and stop sites
-    tag {"SplitBam ${sample_id}"}
-    label 'SplitBam'
-    shell = ['/bin/bash', '-eo', 'pipefail']
- 
-    input:
-        tuple(val(sample_id), path(bam_file), path(bai_files))
-        
-    output:
-        tuple(path("*.bam"), path("*bai"))
-
-    script:
-        """
-        source ${params.split_path}/venv/bin/activate
-        python ${params.split_path}/split_bam_start_site.py $bam_file $params.split_file --flank $params.split_flanks ${params.split_optional}
-        """
-}
-
-
 process VersionLog {
     // Custom process to log repository versions
     tag {"VersionLog ${analysis_id}"}
