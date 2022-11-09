@@ -8,7 +8,6 @@ input_fast5=`realpath -e $1`
 output=$2
 email=$3
 sample_id=$4
-split_file=$5
 
 mkdir -p $output && cd $output
 mkdir -p log
@@ -38,7 +37,6 @@ module load Java/1.8.0_60
 --outdir $output \
 --email $email \
 --sample_id $sample_id \
---split_file $split_file \
 -profile slurm \
 -resume -ansi-log false
 
