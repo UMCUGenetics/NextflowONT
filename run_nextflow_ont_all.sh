@@ -10,25 +10,56 @@ email=$3
 sample_id=$4
 method=${5-default}
 
+
 if [ $method == "wgs" ]; then
     echo " #### Running method wgs  ####"
 fi
 
-if [ $method == "wgs + STRique" ]; then
-    echo " #### Running method wgs  ####"
-    strique_config='/hpc/diaggen/software/development/NextflowONT/repeat_config_hg38_C9.tsv'
-fi
 
-if [ $method == "targeted" ]; then
-    echo " #### Running method wgs +targeted mapping  ####"
+if [ $method == "wgs_roi" ]; then
+    echo " #### Running method wgs + roi phasing  ####"
     roi='--roi '$6
 fi
 
-if [ $method == "sma_splitCas9" ]; then
-    echo " #### Running method sma + splitCas9  ####"
+
+if [ $method == "wgs_roi_repeat" ]; then
+    echo " #### Running method wgs + roi phasing + repeat calling ####"
+    roi='--roi '$6
+    strique_config='--strique_config '$7
+fi
+
+
+if [ $method == "wgs_splitcas9" ]; then
+    echo " #### Running method wgs + split cas9 ####"
+    splitfile='--splitfile '$7
+fi
+
+
+if [ $method == "targeted" ]; then
+    echo " #### Running method wgs + targeted mapping  ####"
+    roi='--roi '$6
+fi
+
+
+if [ $method == "targeted_splitcas9" ]; then
+    echo " #### Running method targeted + split cas9  ####"
     roi='--roi '$6
     splitfile='--splitfile '$7
 fi
+
+
+if [ $method == "targeted_SMA_splitcas9" ]; then
+    echo " #### Running method targeted SMA specific + split cas9  ####"
+    roi='--roi '$6
+    splitfile='--splitfile '$7
+fi
+
+
+if [ $method == "targeted_SMA_adaptive" ]; then
+    echo " #### Running method targeted SMA specific + adaptive sequencing ####"
+    roi='--roi '$6
+fi
+
 
 mkdir -p $output && cd $output
 mkdir -p log
@@ -38,7 +69,7 @@ touch workflow.running
 
 sbatch <<EOT
 #!/bin/bash
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
 #SBATCH --mem 5G
 #SBATCH --gres=tmpspace:10G
