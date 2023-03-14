@@ -29,7 +29,7 @@ if [ $method == "wgs_roi_repeat" ]; then
 fi
 
 
-if [ $method == "wgs_splitcas9" ]; then
+if [ $method == "wgs_splitcas9_repeat" ]; then
     echo " #### Running method wgs + split cas9 ####"
     splitfile='--splitfile '$7
 fi
