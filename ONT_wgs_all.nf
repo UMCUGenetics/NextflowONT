@@ -31,6 +31,10 @@ include ViewSort as Sambamba_ViewSort from "./NextflowModules/Sambamba/0.7.0/Vie
 include HaplotypeCaller_SMN as GATK_HaplotypeCaller_SMN from "./NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf" params(genome: params.target_genome_fasta, compress:true, optional:"")
 include FilterVcfs as GATK_FilterSNV from "./NextflowModules/GATK/4.2.1.0/FilterVCFs.nf" params(genome: params.target_genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target from "./NextflowModules/Whatshap/1.7/Phase.nf" params (genome: params.target_genome_fasta)
+include Zip_Index as Tabix_Zip_Index from "./NextflowModules/Tabix/1.11/Index.nf"
+include Haplotag as Whatshap_Haplotag_Target from "./NextflowModules/Whatshap/1.7/Haplotag.nf" params (genome: params.target_genome_fasta)
+include Index as Sambamba_Index_Target from './NextflowModules/Sambamba/0.7.0/Index.nf'
+
 
 include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
@@ -104,7 +108,7 @@ workflow {
 
     }
 
-    if (params.method == "wgs_splitcas9"){
+    if (params.method == "wgs_splitcas9_repeat"){
 
         //Phasing BAM
         LongshotPhase(Sambamba_Merge.out)
@@ -115,6 +119,18 @@ workflow {
         // BAM split based on Cas9 sites
         SplitBAM(Sambamba_Merge.out)
         //SplitBAM.out.transpose().map { tuple(it) }.view()
+
+        // Variant calling
+        ParsePloidy = Channel.fromPath( params.splitfile )
+            .splitCsv( sep: '\t' )
+            .map{sample_id, chromosome, start, stop, ploidy -> [sample_id, ploidy]}
+            .unique()
+
+        //Convert BAM to SAM
+        //Get ReadIDs
+        //STRique index
+        //Concat all fofn files
+
     }
 
     if (params.method == "targeted"){
@@ -168,6 +184,7 @@ workflow {
         ParsePloidy = Channel.fromPath( params.splitfile )
             .splitCsv( sep: '\t' )
             .map{sample_id, chromosome, start, stop, ploidy -> [sample_id, ploidy]}
+            .unique()
   
         GATK_HaplotypeCaller_SMN(SplitBAM.out.transpose()
             .map { tuple(it) }
@@ -175,19 +192,24 @@ workflow {
             .join(ParsePloidy)
         )
 
-        //GATK_HaplotypeCaller_SMN.out.view()
-
         // Filter SNV only
         GATK_FilterSNV(GATK_HaplotypeCaller_SMN.out)
-        GATK_FilterSNV.out.view()
 
         // Whatshapp polyphase 
         Whatshap_Phase_Target(GATK_FilterSNV.out)
+     
+        // bgzip and index VCF
+        Tabix_Zip_Index(Whatshap_Phase_Target.out)
+     
         // Whatshapp haplotag
+        Whatshap_Haplotag_Target(
+            GATK_HaplotypeCaller_SMN.out
+            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
+            .join(Tabix_Zip_Index.out)
+        )
 
-        // Haplotag BAM based on VC
-        // Haplotag(HaplotypeCaller.out)
-
+        // Index BAM file and publish
+        Sambamba_Index_Target(Whatshap_Haplotag_Target.out)
     }
 
 
@@ -213,12 +235,12 @@ workflow {
 
 
     // QC stats
-    //PICARD_CollectMultipleMetrics(Sambamba_Merge.out)
-    //PICARD_CollectWgsMetrics(Sambamba_Merge.out)
-    //MultiQC(analysis_id, Channel.empty().mix(
-    //    PICARD_CollectMultipleMetrics.out,
-    //    PICARD_CollectWgsMetrics.out
-    //).collect())
+    PICARD_CollectMultipleMetrics(Sambamba_Merge.out)
+    PICARD_CollectWgsMetrics(Sambamba_Merge.out)
+    MultiQC(analysis_id, Channel.empty().mix(
+        PICARD_CollectMultipleMetrics.out,
+        PICARD_CollectWgsMetrics.out
+    ).collect())
 
     // Create log files: Repository versions and Workflow params
     VersionLog()
@@ -274,7 +296,6 @@ process ReBasecallingGuppy{
         --bam_out --fast5_out --align_ref $params.genome_mapping_index 
         """
 }
-
 
 process SplitBAM{
     // Custom process to split BAM based on Cas9 start sites
