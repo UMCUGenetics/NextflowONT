@@ -4,7 +4,7 @@ nextflow.preview.dsl=2
 // Utils modules
 include ExportParams as Workflow_ExportParams from './NextflowModules/Utils/workflow.nf'
 
-include Index as Sambamba_Index from './NextflowModules/Sambamba/0.7.0/Index.nf'
+//include Index as Sambamba_Index from './NextflowModules/Sambamba/0.7.0/Index.nf'
 include Merge as Sambamba_Merge from './NextflowModules/Sambamba/0.7.0/Merge.nf'
 include Filter as Sambamba_Filter from './NextflowModules/Sambamba/0.7.0/Filter.nf'
 include Split as Sambamba_Split from './NextflowModules/Sambamba/0.7.0/Split.nf'
@@ -35,7 +35,6 @@ include Zip_Index as Tabix_Zip_Index from "./NextflowModules/Tabix/1.11/Index.nf
 include Haplotag as Whatshap_Haplotag_Target from "./NextflowModules/Whatshap/1.7/Haplotag.nf" params (genome: params.target_genome_fasta)
 include Index as Sambamba_Index_Target from './NextflowModules/Sambamba/0.7.0/Index.nf'
 
-
 include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
 include MultiQC from './NextflowModules/MultiQC/1.9/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
@@ -45,14 +44,23 @@ sample_id = params.sample_id
 
 workflow {
 
-    //Re-basecalling
-    ReBasecallingGuppy(params.fast5_path, sample_id)
-
-    //BAMindex
-    Sambamba_Index(sample_id, ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> bam_files}.flatten())
+    if( params.start == 'bam' ){
+        // Get fast5 and mapped bams from input folder
+        fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
+        bam_files_guppy = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+    }
+    else if( params.start == 'rebase' ){
+        //Re-basecalling
+        ReBasecallingGuppy(params.input_path, sample_id)
+        fast5_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> fast5_files}
+        bam_files_guppy = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> bam_files}
+    }
+    else{
+        error "Invalid alignment mode: ${start}. This should be either bam (start from basecalled data) or rebase (full re-basecalling)"
+    }
 
     // MergeSort BAMs
-    Sambamba_Merge(Sambamba_Index.out.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file]}.groupTuple())
+    Sambamba_Merge(sample_id, bam_files_guppy)
 
     if (params.method == "wgs"){
 
@@ -61,6 +69,45 @@ workflow {
 
         // BAMIndex
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
+    }
+
+
+    if (params.method == "wgs_repeat"){
+
+        //Phasing BAM
+        LongshotPhase(Sambamba_Merge.out)
+
+        // BAMIndex
+        Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
+     
+        //SplitPhasedBam
+        Sambamba_Split(Sambamba_Index_Longshot.out)
+
+        //Convert BAM to SAM
+        Sambamba_ToSam(Sambamba_Index_Longshot.out)
+        Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
+        Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
+        Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
+
+        // Get ReadIDs
+        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out)
+        Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
+        Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
+        Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
+
+        //STRique index
+        //STRiqueIndex(ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> fast5_files}.flatten())
+        STRiqueIndex(fast5_files.flatten())
+
+        //Concat all fofn files
+        ConcatFofn(STRiqueIndex.out.collect(), sample_id)
+
+        //Repeat calling
+        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
+
     }
   
     if (params.method == "wgs_roi"){
@@ -86,51 +133,83 @@ workflow {
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
 
         //SplitPhasedBam
-        Sambamba_Split(LongshotPhase.out)
+        Sambamba_Split(Sambamba_Index_Longshot.out)
 
         //Convert BAM to SAM
-        Sambamba_ToSam(Sambamba_Filter.out)
+        Sambamba_ToSam(Sambamba_Index_Longshot.out)
         Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
         Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
         Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
 
         // Get ReadIDs
-        Sambamba_GetReadIDs(Sambamba_Filter.out)
+        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out)
         Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
         Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
         Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
 
         //STRique index
-        STRiqueIndex(ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> fast5_files}.flatten())
+        STRiqueIndex(fast5_files.flatten())
 
         //Concat all fofn files
         ConcatFofn(STRiqueIndex.out.collect(), sample_id)
+
+        //Repeat calling
+        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
 
     }
 
     if (params.method == "wgs_splitcas9_repeat"){
 
-        //Phasing BAM
-        LongshotPhase(Sambamba_Merge.out)
+        // BAM split based on Cas9 sites
+        SplitBAM(Sambamba_Merge.out)
+ 
+        ParseSampleIDs = Channel.fromPath( params.splitfile )
+            .splitCsv( sep: '\t' )
+            .map{sample_id, chromosome, start, stop -> [sample_id]}
+            .unique()
+        
+        //Phasing BAMs
+        LongshotPhase(SplitBAM.out.transpose()
+            .map { tuple(it) }
+            .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
+            .join(ParseSampleIDs)
+        )
 
         // BAMIndex
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
 
-        // BAM split based on Cas9 sites
-        SplitBAM(Sambamba_Merge.out)
-        //SplitBAM.out.transpose().map { tuple(it) }.view()
+        //Index Phased BAMs
+        //Sambamba_Index_Longshot.out.join(ParseSampleIDs)
 
-        // Variant calling
-        ParsePloidy = Channel.fromPath( params.splitfile )
-            .splitCsv( sep: '\t' )
-            .map{sample_id, chromosome, start, stop, ploidy -> [sample_id, ploidy]}
-            .unique()
+        //SplitPhasedBam
+        Sambamba_Split(Sambamba_Index_Longshot.out)
 
         //Convert BAM to SAM
-        //Get ReadIDs
-        //STRique index
-        //Concat all fofn files
+        Sambamba_ToSam(Sambamba_Index_Longshot.out)
+        Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
+        Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
+        Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
 
+        // Get ReadIDs
+        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out)
+        Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
+        Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
+        Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
+
+        //STRique index
+        STRiqueIndex(fast5_files.flatten())
+
+        //Concat all fofn files
+        ConcatFofn(STRiqueIndex.out.collect(), sample_id)
+    
+        //Repeat calling
+        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
+        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
     }
 
     if (params.method == "targeted"){
@@ -146,7 +225,6 @@ workflow {
 
     }
 
-
     if (params.method == "targeted_splitcas9"){
 
         // Make FASTQ files of ROI including tags
@@ -159,13 +237,26 @@ workflow {
         Sambamba_ViewSort(Minimap2_mapping.out)
 
         // BAM split on cas9 sites
-        SplitBAM(Sambamba_Merge.out)
+        SplitBAM(Sambamba_ViewSort.out)
 
-        // Make FASTQ files of ROI including tags
-        Samtools_Fastq(SplitBAM.out.transpose().map { tuple(it) })
+        ParseSampleIDs = Channel.fromPath( params.splitfile )
+            .splitCsv( sep: '\t' )
+            .map{sample_id, chromosome, start, stop -> [sample_id]}
+            .unique()
+
+        //Phasing BAM
+        LongshotPhase(SplitBAM.out.transpose()
+            .map { tuple(it) }
+            .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
+            .join(ParseSampleIDs)
+        )
+
+        // BAMIndex
+        Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
 
     }
 
+    
     if (params.method == "targeted_SMA_splitcas9"){
 
         // Make FASTQ files of ROI including tags
@@ -185,7 +276,7 @@ workflow {
             .splitCsv( sep: '\t' )
             .map{sample_id, chromosome, start, stop, ploidy -> [sample_id, ploidy]}
             .unique()
-  
+ 
         GATK_HaplotypeCaller_SMN(SplitBAM.out.transpose()
             .map { tuple(it) }
             .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
@@ -212,7 +303,6 @@ workflow {
         Sambamba_Index_Target(Whatshap_Haplotag_Target.out)
     }
 
-
     if (params.method == "targeted_SMA_adaptive"){
 
         // Make FASTQ files of ROI including tags
@@ -224,13 +314,27 @@ workflow {
         // Sort SAM to BAM
         Sambamba_ViewSort(Minimap2_mapping.out)
 
-        // Variant calling
-        //GATK_HaplotypeCaller_SMN(Sambamba_ViewSort.out)       
+        GATK_HaplotypeCaller_SMN(Sambamba_ViewSort.out
+            .map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
-        // Haplotag BAM based on VC
-        // Haplotag(HaplotypeCaller.out)
+        // Filter SNV only
+        GATK_FilterSNV(GATK_HaplotypeCaller_SMN.out)
 
+        // Whatshapp polyphase
+        Whatshap_Phase_Target(GATK_FilterSNV.out)
 
+        // bgzip and index VCF
+        Tabix_Zip_Index(Whatshap_Phase_Target.out)
+
+        // Whatshapp haplotag
+        Whatshap_Haplotag_Target(
+            GATK_HaplotypeCaller_SMN.out
+            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
+            .join(Tabix_Zip_Index.out)
+        )
+
+        // Index BAM file and publish
+        Sambamba_Index_Target(Whatshap_Haplotag_Target.out)
     }
 
 
@@ -282,7 +386,7 @@ process ReBasecallingGuppy{
     shell = ['/bin/bash', '-eo', 'pipefail']
 
     input:
-        val(fast5_path)
+        val(input_path)
         val(sample_id)
 
     output:
@@ -292,7 +396,7 @@ process ReBasecallingGuppy{
     script:
         """
         $params.guppy_basecaller_path -x "cuda:0" -c $params.guppy_path/data/$params.guppy_basecaller_config \
-        --num_callers ${task.cpus} -i $fast5_path -s ./ $params.guppy_basecaller_params \
+        -i $input_path -s ./ $params.guppy_basecaller_params \
         --bam_out --fast5_out --align_ref $params.genome_mapping_index 
         """
 }
@@ -305,7 +409,7 @@ process SplitBAM{
     //cache = false
 
     input:
-        tuple(sample_id, rg_id, path(bam_file), path(bai_file))
+        tuple(sample_id, path(bam_file), path(bai_file))
 
     output:
         tuple(sample_id, "*split.bam", "*split.bam.bai")
@@ -318,22 +422,26 @@ process SplitBAM{
 }
 
 
-process SaveInputFile {
-    tag {"SaveInputFile ${analysis_id}"}
-    label 'SaveInputFile'
-    shell = ['/bin/bash', '-euo', 'pipefail']
-    cache = false  //Disable cache to force a new files to be copied.
-  
+process ConcatFofn{
+    // Custom process to concat all fofn files
+    tag {"Concat Fofn ${sample_id}"}
+    label 'Concat_Fofn'
+    shell = ['/bin/bash', '-eo', 'pipefail']
+
     input:
-       path(roi)
- 
+        path(fofn_files)
+        val(sample_id)
+
     output:
-       path(roi)
+        path("${sample_id}.fofn")
 
     script:
+        fofn  = fofn_files.join(' ')
         """
+        cat ${fofn} > ${sample_id}.fofn
         """
 }
+
 
 process VersionLog {
     // Custom process to log repository versions
