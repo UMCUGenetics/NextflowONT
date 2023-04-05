@@ -21,11 +21,8 @@ rebase = include re-basecalling\
 bam = start from Guppy folder including bam files.\
 \
 <method>
-| Syntax | Description |
+| Method | Description |
 | ----------- | ----------- |
-| Header | Title |
-| Paragraph | Text | 
-
 |wgs|perform whole genome mapping + longshot phasing.|
 |wgs_repeat|perform whole genome mapping + longshot phasing + repeat calling STRique. Needs optional parameter --strique_config <strique_config>|
 wgs_roi|perform whole genome mapping + slice on ROI + longshot phasing.  Needs optional parameter --roi <roi_file>|
