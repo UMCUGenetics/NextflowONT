@@ -33,11 +33,13 @@ wgs_roi_repeat|	perform whole genome mapping + slice on ROI + longshot phasing +
 |targeted_SMA_splitcas9|perform whole genome mapping + split based on Cas9 sites +  SMA Variant calling + haplotype phasing|--roi <roi> --splitfile <splitfileSMA>|
 |targeted_SMA_adaptive|perform whole genome mapping + targeted remapping (SMN2 default in .config) +  SMA Variant calling + haplotype phasing|--roi <roi> --ploidy <SMN2 copy number>|
 
-in which:\
+in which:
 
-<strique_config>	STRique config file: see STRIque documentation for correct format.\
-<roi>		Region of Interest:  <chromosome>:<from>-<to>\
-<splitfile>		Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample): <SampleID> <chromsome> <position1> <postion2>\
-<splitfileSMA>		Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample) and SMN2 copynumber (ploidy): <SampleID> <chromsome> <position1> <postion2> <ploidy>\
-<SMN2 copy number>	SMN2 copynumber (ploidy) <int>\
+| Method | Description |
+| ----------- | ----------- |
+|<strique_config>|STRique config file: see STRIque documentation for correct format.|
+|<roi>|	Region of Interest:  <chromosome>:<from>-<to>|
+|<splitfile>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample): <SampleID> <chromsome> <position1> <postion2>|
+|<splitfileSMA>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample) and SMN2 copynumber (ploidy): <SampleID> <chromsome> <position1> <postion2> <ploidy>|
+|<SMN2 copy number>|SMN2 copynumber (ploidy) <int>|
 
