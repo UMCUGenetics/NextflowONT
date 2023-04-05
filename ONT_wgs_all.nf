@@ -28,7 +28,7 @@ include CallRepeat as STRiqueCallRepeat_nohap from './NextflowModules/STRique/0.
 include Fastq as Samtools_Fastq from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
 include Mapping as Minimap2_mapping from "./NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf" params(optional: " -y -ax map-ont", genome_fasta: params.target_genome_fasta)
 include ViewSort as Sambamba_ViewSort from "./NextflowModules/Sambamba/0.7.0/ViewSort.nf"
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_SMN from "./NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf" params(genome: params.target_genome_fasta, compress:true, optional:"")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_SMN from "./NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf" params(genome: params.target_genome_fasta, compress:true, optional:"--intervals $params.calling_target_smn")
 include FilterVcfs as GATK_FilterSNV from "./NextflowModules/GATK/4.2.1.0/FilterVCFs.nf" params(genome: params.target_genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target from "./NextflowModules/Whatshap/1.7/Phase.nf" params (genome: params.target_genome_fasta)
 include Zip_Index as Tabix_Zip_Index from "./NextflowModules/Tabix/1.11/Index.nf"
