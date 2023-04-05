@@ -31,9 +31,9 @@ bam = start from Guppy folder indcluding bam files.
 
 in which:
 
-<strique_config>
-<roi_file>
-<splitfile>
-<splitfileSMA>
-<SMN2 copy number>
+<strique_config>	STRique config file: see STRIque documentation for correct format.
+<roi_file>		Region of Interest:  <chromosome>:<from>-<to>
+<splitfile>		Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample): <SampleID> <chromsome> <position1> <postion2>
+<splitfileSMA>		Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample) and SMN2 copynumber (ploidy): <SampleID> <chromsome> <position1> <postion2> <ploidy>
+<SMN2 copy number>	SMN2 copynumber (ploidy) <int>
 
