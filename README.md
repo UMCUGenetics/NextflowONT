@@ -21,11 +21,12 @@ rebase = include re-basecalling\
 bam = start from Guppy folder including bam files.\
 \
 <method>
+
 | Method | Description | Optional parameters needed|
-| ----------- | ----------- | ----------- |
+| ----------- | :----------- | :------------------------ |
 |wgs|perform whole genome mapping + longshot phasing.|
 |wgs_repeat|perform whole genome mapping + longshot phasing + repeat calling STRique|--strique_config <strique_config>|
-wgs_roi|perform whole genome mapping + slice on ROI + longshot phasing|--roi '<roi>'|
+wgs_roi|perform whole genome mapping + slice on ROI + longshot phasing|--roi <roi>|
 wgs_roi_repeat|	perform whole genome mapping + slice on ROI + longshot phasing + repeat calling STRique|--strique_config <strique_config> --roi <roi>|
 |wgs_splitcas9_repeat|	perform whole genome mapping + split based on Cas9 sites + longshot phasing + repeat calling STRique|--splitfile <splitfile> --strique_config <strique_config>|
 |targeted|perform whole genome mapping + targeted remapping (SMN2 default in .config)|--roi <roi_file>|
@@ -36,7 +37,7 @@ wgs_roi_repeat|	perform whole genome mapping + slice on ROI + longshot phasing +
 in which:
 
 | Method | Description |
-| ----------- | ----------- |
+| :----------- | :--------------------------- |
 |<strique_config>|STRique config file: see STRIque documentation for correct format|
 |<roi>|Region of Interest:  <chromosome>:<from>-<to>|
 |<splitfile>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample): <SampleID> <chromsome> <position1> <postion2>|
