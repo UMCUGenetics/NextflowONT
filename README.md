@@ -41,5 +41,5 @@ in which:
 |\<strique_config\>|STRique config file|see STRIque documentation for correct format|
 |\<roi\>|Region of Interest|\<chromosome\>:\<from\>-\<to\>|
 |\<splitfile\>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample)|\<SampleID\> \<chromosome\> \<position1\> \<postion2\>|
-|\<splitfileSMA\>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample) and SMN2 copynumber (ploidy)|\<SampleID\> \<chromsome> \<position1\> \<postion2\> \<ploidy\>|
+|\<splitfileSMA\>|Tab delimited file containing Cas9 split sites for each sample (may contain more lines per sample) and SMN2 copynumber (ploidy)|\<SampleID\> \<chromosome> \<position1\> \<postion2\> \<ploidy\>|
 |\<SMN2 copy number\>|SMN2 copynumber (ploidy)|\<int\>|
