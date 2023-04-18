@@ -96,7 +96,6 @@ workflow {
         Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
 
         //STRique index
-        //STRiqueIndex(ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> fast5_files}.flatten())
         STRiqueIndex(fast5_files.flatten())
 
         //Concat all fofn files
