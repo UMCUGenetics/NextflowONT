@@ -393,6 +393,7 @@ process ReBasecallingGuppy{
         //tuple(path("pass/*.fastq.gz"), path("workspace/*.fast5"), path ("*"), path("pass/*.bam"))
 
     script:
+        // adding --index will also give .bai in output. Not implemented yet due to cohort.
         """
         $params.guppy_basecaller_path -x "cuda:0" -c $params.guppy_path/data/$params.guppy_basecaller_config \
         -i $input_path -s ./ $params.guppy_basecaller_params \
