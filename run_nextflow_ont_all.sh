@@ -88,8 +88,6 @@ sbatch <<EOT
 #SBATCH --export=NONE
 #SBATCH --account=diaggen
 
-module load Java/1.8.0_60
-
 /hpc/diaggen/software/tools/nextflow run $workflow_path/ONT_wgs_all.nf \
 -c $workflow_path/ONT_wgs_all.config \
 --input_path $input_path \
