@@ -17,10 +17,12 @@ curl -s https://get.nextflow.io | bash
 nextflow run ONT.nf -c ONT.config --fastq_path <fastq_dir_path> --outdir <output_dir_path> --start <bam|rebase> --method <method> --email <email> [-profile slurm|mac]
 ```
 \
+\
+<methods>
 rebase = include re-basecalling\
 bam = start from Guppy folder including bam files.\
+bam_remap = start from Guppy folder including bam files, but perform remapping to genome in config.
 \
-<method>
 
 | Method | Description | Optional parameters needed|
 | --- | :--- | :--- |
@@ -29,10 +31,9 @@ bam = start from Guppy folder including bam files.\
 wgs_roi|perform whole genome mapping + slice on ROI + longshot phasing|--roi \<roi\>|
 wgs_roi_repeat|	perform whole genome mapping + slice on ROI + longshot phasing + repeat calling STRique|--strique_config \<strique_config\> --roi \<roi\>|
 |wgs_splitcas9_repeat|	perform whole genome mapping + split based on Cas9 sites + longshot phasing + repeat calling STRique|--splitfile \<splitfile\> --strique_config \<strique_config\>|
-|targeted|perform whole genome mapping + targeted remapping (SMN2 default in .config)|--roi \<roi\>|
 |targeted_splitcas9|perform whole genome mapping + targeted remapping (SMN2 default in .config) + split BAM based on Cas9 sites|--roi \<roi\> --splitfile \<splitfile\>|
 |targeted_SMA_splitcas9|perform whole genome mapping + split based on Cas9 sites +  SMA Variant calling + haplotype phasing|--roi \<roi\> --splitfile \<splitfileSMA\>|
-|targeted_SMA_adaptive|perform whole genome mapping + targeted remapping (SMN2 default in .config) +  SMA Variant calling + haplotype phasing|--roi \<roi\> --ploidy \<SMN2 copy number\>|
+|targeted_SMA_adaptive|perform whole genome mapping (if required) +  SMA Variant calling + haplotype phasing|--ploidy \<SMN2 copy number\>|
 
 in which:
 
