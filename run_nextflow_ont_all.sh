@@ -41,30 +41,15 @@ if [ $method == "wgs_splitcas9_repeat" ]; then
 fi
 
 
-if [ $method == "targeted" ]; then
-    echo " #### Running method wgs + targeted mapping  ####"
-    roi='--roi '$7
-fi
-
-
-if [ $method == "targeted_splitcas9" ]; then
-    echo " #### Running method targeted + split cas9  ####"
-    roi='--roi '$7
-    splitfile='--splitfile '$8
-fi
-
-
-if [ $method == "targeted_SMA_splitcas9" ]; then
+if [ $method == "SMA_splitcas9" ]; then
     echo " #### Running method targeted SMA specific + split cas9  ####"
-    roi='--roi '$7
-    splitfile='--splitfile '$8
+    splitfile='--splitfile '$7
 fi
 
 
-if [ $method == "targeted_SMA_adaptive" ]; then
+if [ $method == "SMA_adaptive" ]; then
     echo " #### Running method targeted SMA specific + adaptive sequencing ####"
-    roi='--roi '$7
-    ploidy='--ploidy '$8
+    ploidy='--ploidy '$7
 fi
 
 
@@ -78,8 +63,8 @@ sbatch <<EOT
 #!/bin/bash
 #SBATCH --time=144:00:00
 #SBATCH --nodes=1
-#SBATCH --mem 5G
-#SBATCH --gres=tmpspace:10G
+#SBATCH --mem 10G
+#SBATCH --gres=tmpspace:16G
 #SBATCH --job-name Nextflow_ONT
 #SBATCH -o log/slurm_nextflow_ont.%j.out
 #SBATCH -e log/slurm_nextflow_ont.%j.err
