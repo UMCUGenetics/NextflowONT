@@ -92,7 +92,7 @@ ${roi:-""} \
 ${strique_config:-""} \
 ${splitfile:-""} \
 ${ploidy:-""} \
-${optional_params[@]:-""}
+${optional_params[@]:-""} \
 -profile slurm \
 -resume -ansi-log false
 
