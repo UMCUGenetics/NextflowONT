@@ -74,7 +74,8 @@ workflow {
     }
     else if( params.start == 'rebase' ){
         //Re-basecalling
-        ReBasecallingGuppy(params.input_path, sample_id)
+        fast5 = Channel.fromPath(params.input_path +  "/fast5_*/*.fast5").toList()
+        ReBasecallingGuppy(params.input_path, sample_id, fast5.sum{it.size()})
         fast5_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> fast5_files}
         bam_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> bam_files}
         summary_file = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> summary_file}
@@ -415,6 +416,7 @@ process ReBasecallingGuppy{
     input:
         val(input_path)
         val(sample_id)
+        val(fast5)
 
     output:
         tuple(path("pass/*.fastq.gz"), path("workspace/fast5_pass/*.fast5"), path ("*"), path("pass/*.bam"), path("sequencing_summary.txt"))
