@@ -127,9 +127,7 @@ workflow {
     //Index BAM file
     Sambamba_Index_Deduplex(PICARD_FilterSamReads.out)
 
-    Bam_file = PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out
-        .map{bam_file, bai_file -> bai_file}
-    ).map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
+    Bam_file = PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out.map{bam_file, bai_file -> bai_file})
 
     if (params.method == "wgs"){
         //Phasing BAM
@@ -178,7 +176,7 @@ workflow {
   
     if (params.method == "wgs_roi"){
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
+        Sambamba_Filter_ROI(Bam_file)
 
         //Phasing roi BAM
         LongshotPhase_ROI(Sambamba_Filter_ROI.out)
@@ -189,7 +187,7 @@ workflow {
 
     if (params.method == "wgs_roi_repeat"){
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
+        Sambamba_Filter_ROI(Bam_file)
 
         //Phasing roi BAM
         LongshotPhase_ROI(Sambamba_Filter_ROI.out)
@@ -319,8 +317,7 @@ workflow {
 
     if (params.method == "SMA_adaptive"){
         // Variant calling
-        GATK_HaplotypeCaller_Paraphase(Bam_file
-             .map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+        GATK_HaplotypeCaller_Paraphase(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
         // Filter SNV only Paraphase variants
         GATK_FilterSNV_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
@@ -343,8 +340,7 @@ workflow {
 
 
         // Variant calling on used defined region
-        GATK_HaplotypeCaller_Region(Bam_file
-             .map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+        GATK_HaplotypeCaller_Region(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
         // Whatshapp polyphase region
         Whatshap_Phase_Target_Region(GATK_HaplotypeCaller_Region.out
@@ -433,16 +429,16 @@ process ReBasecallingGuppy{
 
 process SplitBAM{
     // Custom process to split BAM based on Cas9 start sites
-    tag {"SplitBAM ${sample_id}"}
+    tag {"SplitBAM ${bam_file}"}
     label 'SplitBAM'
     shell = ['/bin/bash', '-eo', 'pipefail']
     //cache = false
 
     input:
-        tuple(sample_id, path(bam_file), path(bai_file))
+        tuple(path(bam_file), path(bai_file))
 
     output:
-        tuple(sample_id, "*split.bam", "*split.bam.bai")
+        tuple("*split.bam", "*split.bam.bai")
 
     script:
         """
