@@ -59,7 +59,7 @@ include Index as Sambamba_Index_Target_Region from './NextflowModules/Sambamba/0
 
 include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
-include MultiQC from './NextflowModules/MultiQC/1.9/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
+include MultiQC from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 
 def analysis_id = params.outdir.split('/')[-1]
 sample_id = params.sample_id
@@ -363,8 +363,8 @@ workflow {
 
 
     // QC stats
-    PICARD_CollectMultipleMetrics(Bam_file)
-    PICARD_CollectWgsMetrics(Bam_file)
+    PICARD_CollectMultipleMetrics(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
+    PICARD_CollectWgsMetrics(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
     MultiQC(analysis_id, Channel.empty().mix(
         PICARD_CollectMultipleMetrics.out,
         PICARD_CollectWgsMetrics.out
