@@ -12,6 +12,7 @@ include Filter_Condition as Sambamba_Filter_Condition from './NextflowModules/Sa
 include Split as Sambamba_Split from './NextflowModules/Sambamba/0.7.0/Split.nf'
 include Index as Sambamba_Index_Longshot from './NextflowModules/Sambamba/0.7.0/Index.nf'
 include Index as Sambamba_Index_Deduplex from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include Index as Sambamba_Index_ReadGroup from './NextflowModules/Sambamba/0.7.0/Index.nf'
 include LongshotPhase from './NextflowModules/Longshot/0.4.1/Phase.nf'
 include LongshotPhase as LongshotPhase_ROI from './NextflowModules/Longshot/0.4.1/Phase.nf'
 include LongshotPhase as LongshotPhase_Split from './NextflowModules/Longshot/0.4.1/Phase.nf'
@@ -34,8 +35,7 @@ include CallRepeat as STRiqueCallRepeat_hap2 from './NextflowModules/STRique/0.4
 include CallRepeat as STRiqueCallRepeat_nohap from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
 
 include Fastq as Samtools_Fastq from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
-include Mapping as Minimap2_target from './NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.target_genome_fasta)
-include Mapping as Minimap2_remap from './NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
+include Mapping as Minimap2_remap from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
 include ViewSort as Sambamba_ViewSort_target from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 
@@ -83,51 +83,51 @@ workflow {
     else if( params.start == 'bam_remap' ){
         // Get fast5 and mapped bams from input folder
         fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
-        bam_files_guppy = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+        //bam_files_guppy = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+        bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
         summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
+    }
+    else{
+        error "Invalid alignment mode: ${start}. This should be bam (start from basecalled data), bam_remap (start from bam, but perform remapping with minimap2), or rebase (full re-basecalling)"
+    }
 
-        //Index bAM files
-        Sambamba_Index(bam_files_guppy.flatten())
+    // MergeSort BAMs
+    Sambamba_Merge(sample_id, bam_files)
 
+    // Filter for minimum readlength
+    Sambamba_Filter_Condition(Sambamba_Merge.out)
+ 
+    // Identify readpairs
+    Duplex_PairsFromSummary(sample_id, summary_file)
+
+    // Identify possible duplex reads from read pairs
+    Duplex_FilterPairs(Duplex_PairsFromSummary.out, Sambamba_Filter_Condition.out)
+
+    //Filter BAM for duplicate duplex read
+    PICARD_FilterSamReads(Sambamba_Filter_Condition.out, Duplex_FilterPairs.out)
+
+    //Index BAM file
+    Sambamba_Index_Deduplex(PICARD_FilterSamReads.out)
+
+    if( params.start == 'bam_remap' ){
         // Extract FASTQ from BAM
-        Samtools_Fastq(Sambamba_Index.out)
+        Samtools_Fastq(Sambamba_Index_Deduplex.out)
 
          // Re-map ROI fastq
         Minimap2_remap(Samtools_Fastq.out)
 
         // Sort SAM to BAM
         Sambamba_ViewSort_remap(Minimap2_remap.out)
- 
-        bam_files = Sambamba_ViewSort_remap.out.map{sample_id, bam_file, bai_file -> bam_file}
+
+        Bam_file = Sambamba_ViewSort_remap.out
     }
     else{
-        error "Invalid alignment mode: ${start}. This should be bam (start from basecalled data), bam_remap (start from bam, but perform remapping with minimap2), or rebase (full re-basecalling)"
+         // Add readgroup to BAMs
+        Samtools_AddReadgroup(sample_id, PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out))
+        Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out)        
+        Bam_file = Samtools_AddReadgroup.out.combine(Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file})
     }
 
-    // Add readgroup to BAMs
-    Samtools_AddReadgroup(sample_id, bam_files.flatten())
-
-    // Filter for minimum readlength
-    Sambamba_Filter_Condition(Samtools_AddReadgroup.out)
-
-    // MergeSort BAMs
-    Sambamba_Merge(sample_id, Sambamba_Filter_Condition.out
-        .map{bam_file, bai_file -> bam_file}.collect()
-    )
-
-    // Identify readpairs
-    Duplex_PairsFromSummary(sample_id, summary_file)
-
-    // Identify possible duplex reads from read pairs
-    Duplex_FilterPairs(Duplex_PairsFromSummary.out, Sambamba_Merge.out)
-
-    //Filter BAM for duplicate duplex read
-    PICARD_FilterSamReads(Sambamba_Merge.out, Duplex_FilterPairs.out)
-
-    //Index BAM file
-    Sambamba_Index_Deduplex(PICARD_FilterSamReads.out)
-
-    Bam_file = PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out.map{bam_file, bai_file -> bai_file})
 
     if (params.method == "wgs"){
         //Phasing BAM
