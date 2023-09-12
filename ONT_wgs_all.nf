@@ -123,7 +123,7 @@ workflow {
     }
     else{
          // Add readgroup to BAMs
-        Samtools_AddReadgroup(sample_id, PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out))
+        Samtools_AddReadgroup(sample_id, PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out.map{bam_file, bai_file -> bai_file}))
         Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out)        
         Bam_file = Samtools_AddReadgroup.out.combine(Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file})
     }
