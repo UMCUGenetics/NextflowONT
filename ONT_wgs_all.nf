@@ -41,8 +41,7 @@ include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7
 
 
 include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases")
-
-include FilterVcfs as GATK_FilterSNV_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include FilterVcfs as GATK_FilterSNV_Target_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Paraphase from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Paraphase from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
 include Zip_Index as Tabix_Zip_Index_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
@@ -50,7 +49,7 @@ include Index as Sambamba_Index_Target_Paraphase from './NextflowModules/Sambamb
 
 
 include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases")
-
+include FilterVcfs as GATK_FilterSNV_Target_Region from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Region from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Region from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
 include Zip_Index as Tabix_Zip_Index_Region from './NextflowModules/Tabix/1.11/Index.nf'
@@ -320,10 +319,10 @@ workflow {
         GATK_HaplotypeCaller_Paraphase(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
         // Filter SNV only Paraphase variants
-        GATK_FilterSNV_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
+        GATK_FilterSNV_Target_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
 
         // Whatshapp polyphase Paraphase variants
-        Whatshap_Phase_Target_Paraphase(GATK_FilterSNV_Paraphase.out)
+        Whatshap_Phase_Target_Paraphase(GATK_FilterSNV_Target_Paraphase.out)
 
         // bgzip and index VCF Paraphase variants
         Tabix_Zip_Index_Paraphase(Whatshap_Phase_Target_Paraphase.out)
@@ -342,10 +341,11 @@ workflow {
         // Variant calling on used defined region
         GATK_HaplotypeCaller_Region(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
+        //
+        GATK_FilterSNV_Target_Region(GATK_HaplotypeCaller_Region.out)
+
         // Whatshapp polyphase region
-        Whatshap_Phase_Target_Region(GATK_HaplotypeCaller_Region.out
-            .map{sample_id, bam_file, bai_file, vcf, vcf_index, ploidy -> [sample_id, bam_file, bai_file, vcf, ploidy]}
-        )
+        Whatshap_Phase_Target_Region(GATK_FilterSNV_Target_Region.out)
 
         // bgzip and index VCF
         Tabix_Zip_Index_Region(Whatshap_Phase_Target_Region.out)
