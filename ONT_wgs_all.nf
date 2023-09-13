@@ -40,7 +40,7 @@ include ViewSort as Sambamba_ViewSort_target from './NextflowModules/Sambamba/0.
 include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 
 
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include FilterVcfs as GATK_FilterSNV_Target_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Paraphase from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Paraphase from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
@@ -48,7 +48,7 @@ include Zip_Index as Tabix_Zip_Index_Paraphase from './NextflowModules/Tabix/1.1
 include Index as Sambamba_Index_Target_Paraphase from './NextflowModules/Sambamba/0.7.0/Index.nf'
 
 
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include FilterVcfs as GATK_FilterSNV_Target_Region from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Region from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Region from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
