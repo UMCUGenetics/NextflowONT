@@ -63,7 +63,6 @@ fi
 
 if [ $method == "targeted_SMA_adaptive" ]; then
     echo " #### Running method targeted SMA specific + adaptive sequencing ####"
-    #roi='--roi '$7
     ploidy='--ploidy '$7
 fi
 
