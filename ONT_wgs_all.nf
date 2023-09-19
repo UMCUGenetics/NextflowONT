@@ -40,20 +40,31 @@ include ViewSort as Sambamba_ViewSort_target from './NextflowModules/Sambamba/0.
 include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 
 
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include FilterVcfs as GATK_FilterSNV_Target_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Paraphase from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Paraphase from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
 include Zip_Index as Tabix_Zip_Index_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
+include Zip_Index as Tabix_Zip_Index_Bedtools_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
 include Index as Sambamba_Index_Target_Paraphase from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include Annotate as Bedtools_Annotate_Paraphase from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Paraphase } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+    genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
+    snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
+)
 
-
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include FilterVcfs as GATK_FilterSNV_Target_Region from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include Phase as Whatshap_Phase_Target_Region from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include Haplotag as Whatshap_Haplotag_Target_Region from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
 include Zip_Index as Tabix_Zip_Index_Region from './NextflowModules/Tabix/1.11/Index.nf'
+include Zip_Index as Tabix_Zip_Index_Bedtools_Region from './NextflowModules/Tabix/1.11/Index.nf'
 include Index as Sambamba_Index_Target_Region from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include Annotate as Bedtools_Annotate_Region from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+    genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
+    snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
+)
 
 
 include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
@@ -325,18 +336,26 @@ workflow {
         Whatshap_Phase_Target_Paraphase(GATK_FilterSNV_Target_Paraphase.out)
 
         // bgzip and index VCF Paraphase variants
-        Tabix_Zip_Index_Paraphase(Whatshap_Phase_Target_Paraphase.out)
+        Tabix_Zip_Index_Paraphase(Whatshap_Phase_Target_Paraphase.out.map{sample_id, vcf_file, ploidy -> [sample_id, vcf_file]})
+
+        //Annotate Homopolymer VCF
+        Bedtools_Annotate_Paraphase(Tabix_Zip_Index_Paraphase.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]})  
+ 
+        //Index Homopolymer annotated BED file
+        Tabix_Zip_Index_Bedtools_Paraphase(Bedtools_Annotate_Paraphase.out.map{vcf_file -> [sample_id, vcf_file]})
+
+        //Filter VCF
+        GATK_VariantFiltration_Paraphase(Tabix_Zip_Index_Bedtools_Paraphase.out)
 
         // Whatshapp haplotag Paraphase variants
         Whatshap_Haplotag_Target_Paraphase(
             GATK_HaplotypeCaller_Paraphase.out
-            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
-            .join(Tabix_Zip_Index_Paraphase.out)
+            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file, ploidy]}
+            .join(GATK_VariantFiltration_Paraphase.out)
         )
 
         // Index BAM file and publish Paraphase variants
         Sambamba_Index_Target_Paraphase(Whatshap_Haplotag_Target_Paraphase.out)
-
 
         // Variant calling on used defined region
         GATK_HaplotypeCaller_Region(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
@@ -348,13 +367,22 @@ workflow {
         Whatshap_Phase_Target_Region(GATK_FilterSNV_Target_Region.out)
 
         // bgzip and index VCF
-        Tabix_Zip_Index_Region(Whatshap_Phase_Target_Region.out)
+        Tabix_Zip_Index_Region(Whatshap_Phase_Target_Region.out.map{sample_id, vcf_file, ploidy -> [sample_id, vcf_file]})
+
+        //Annotate Homopolymer VCF
+        Bedtools_Annotate_Region(Tabix_Zip_Index_Region.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]})
+
+        //Index Homopolymer annotated BED file
+        Tabix_Zip_Index_Bedtools_Region(Bedtools_Annotate_Region.out.map{vcf_file -> [sample_id, vcf_file]})
+
+        //Filter VCF
+        GATK_VariantFiltration_Region(Tabix_Zip_Index_Bedtools_Region.out)
 
         // Whatshapp haplotag
         Whatshap_Haplotag_Target_Region(
             GATK_HaplotypeCaller_Region.out
-            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
-            .join(Tabix_Zip_Index_Region.out)
+            .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file, ploidy]}
+            .join(GATK_VariantFiltration_Region.out)
         )
 
         // Index BAM file and publish region variants
