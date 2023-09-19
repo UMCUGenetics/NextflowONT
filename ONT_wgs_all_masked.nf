@@ -11,7 +11,11 @@ include Filter_ROI as Sambamba_Filter_ROI from './NextflowModules/Sambamba/0.7.0
 include Filter_Condition as Sambamba_Filter_Condition from './NextflowModules/Sambamba/0.7.0/Filter.nf' params(conditions: params.conditions)
 include Split as Sambamba_Split from './NextflowModules/Sambamba/0.7.0/Split.nf'
 include Index as Sambamba_Index_Longshot from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include Index as Sambamba_Index_Deduplex from './NextflowModules/Sambamba/0.7.0/Index.nf'
 include LongshotPhase from './NextflowModules/Longshot/0.4.1/Phase.nf'
+include PairsFromSummary as Duplex_PairsFromSummary from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
+include FilterPairs as Duplex_FilterPairs from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
+include FilterSamReads as PICARD_FilterSamReads from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
 
 include ToSAM as Sambamba_ToSam from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
 include ToSAM as Sambamba_ToSam_hap1 from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
@@ -28,26 +32,33 @@ include CallRepeat as STRiqueCallRepeat_hap2 from './NextflowModules/STRique/0.4
 include CallRepeat as STRiqueCallRepeat_nohap from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
 
 include Fastq as Samtools_Fastq from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
-include Mapping as Minimap2_mapping from "./NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf" params(optional: " -y -ax map-ont", genome_fasta: params.target_genome_fasta)
-include ViewSort as Sambamba_ViewSort from "./NextflowModules/Sambamba/0.7.0/ViewSort.nf"
+include Mapping as Minimap2_target from './NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.target_genome_fasta)
+include Mapping as Minimap2_remap from './NextflowModules/Minimap2/2.2.4--h5bf99c6_0/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
+include ViewSort as Sambamba_ViewSort_target from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
+include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from "./NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf" params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase")
-include FilterVcfs as GATK_FilterSNV_Paraphase from "./NextflowModules/GATK/4.2.1.0/FilterVCFs.nf" params(genome: params.genome_fasta, filter: "SNP")
-include Phase as Whatshap_Phase_Target_Paraphase from "./NextflowModules/Whatshap/1.7/Phase.nf" params (genome: params.genome_fasta)
-include Haplotag as Whatshap_Haplotag_Target_Paraphase from "./NextflowModules/Whatshap/1.7/Haplotag.nf" params (genome: params.genome_fasta, extention: "_paraphase")
-include Zip_Index as Tabix_Zip_Index_Paraphase from "./NextflowModules/Tabix/1.11/Index.nf"
+
+//include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases")
+
+include FilterVcfs as GATK_FilterSNV_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include Phase as Whatshap_Phase_Target_Paraphase from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include Haplotag as Whatshap_Haplotag_Target_Paraphase from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
+include Zip_Index as Tabix_Zip_Index_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
 include Index as Sambamba_Index_Target_Paraphase from './NextflowModules/Sambamba/0.7.0/Index.nf'
 
 
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from "./NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf" params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region")
-include Phase as Whatshap_Phase_Target_Region from "./NextflowModules/Whatshap/1.7/Phase.nf" params (genome: params.genome_fasta)
-include Haplotag as Whatshap_Haplotag_Target_Region from "./NextflowModules/Whatshap/1.7/Haplotag.nf" params (genome: params.genome_fasta, extention: "_region")
-include Zip_Index as Tabix_Zip_Index_Region from "./NextflowModules/Tabix/1.11/Index.nf"
+//include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region")
+include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress:true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases")
+
+include Phase as Whatshap_Phase_Target_Region from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include Haplotag as Whatshap_Haplotag_Target_Region from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
+include Zip_Index as Tabix_Zip_Index_Region from './NextflowModules/Tabix/1.11/Index.nf'
 include Index as Sambamba_Index_Target_Region from './NextflowModules/Sambamba/0.7.0/Index.nf'
 
 
-include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
-include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
+include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
+include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
 include MultiQC from './NextflowModules/MultiQC/1.9/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 
 def analysis_id = params.outdir.split('/')[-1]
@@ -55,45 +66,80 @@ sample_id = params.sample_id
 
 workflow {
 
-    if( params.start == 'bam' ){
+    if( params.start == 'bam'){
         // Get fast5 and mapped bams from input folder
         fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
-        bam_files_guppy = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+        bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+        summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
     }
     else if( params.start == 'rebase' ){
         //Re-basecalling
         ReBasecallingGuppy(params.input_path, sample_id)
-        fast5_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> fast5_files}
-        bam_files_guppy = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files -> bam_files}
+        fast5_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> fast5_files}
+        bam_files = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> bam_files}
+        summary_file = ReBasecallingGuppy.out.map{fastq_files, fast5_files, all_files, bam_files, summary_file -> summary_file}
+    }
+    else if( params.start == 'bam_remap' ){
+        // Get fast5 and mapped bams from input folder
+        fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
+        bam_files_guppy = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
+        summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
+
+        // Extract FASTQ from BAM
+        Samtools_Fastq(bam_files_guppy.flatten())
+
+         // Re-map ROI fastq
+        Minimap2_remap(Samtools_Fastq.out)
+
+        // Sort SAM to BAM
+        Sambamba_ViewSort_remap(Minimap2_remap.out)
+ 
+        bam_files = Sambamba_ViewSort_remap.out.map{sample_id, bam_file, bai_file -> bam_file}
     }
     else{
-        error "Invalid alignment mode: ${start}. This should be either bam (start from basecalled data) or rebase (full re-basecalling)"
+        error "Invalid alignment mode: ${start}. This should be bam (start from basecalled data), bam_remap (start from bam, but perform remapping with minimap2), or rebase (full re-basecalling)"
     }
 
+
     // Add readgroup to BAMs
-    Samtools_AddReadgroup(sample_id, bam_files_guppy.flatten())
+    Samtools_AddReadgroup(sample_id, bam_files.flatten())
 
     // Filter for minimum readlength
     Sambamba_Filter_Condition(Samtools_AddReadgroup.out)
 
     // MergeSort BAMs
-    Sambamba_Merge(sample_id, Sambamba_Filter_Condition.out.map{bam_file, bai_file -> bam_file}.collect())
+    Sambamba_Merge(sample_id, Sambamba_Filter_Condition.out
+        .map{bam_file, bai_file -> bam_file}.collect()
+    )
 
+    // Identify readpairs
+    Duplex_PairsFromSummary(sample_id, summary_file)
+
+    // Identify possible duplex reads from read pairs
+    Duplex_FilterPairs(Duplex_PairsFromSummary.out, Sambamba_Merge.out)
+
+    //Filter BAM for duplicate duplex read
+    PICARD_FilterSamReads(Sambamba_Merge.out, Duplex_FilterPairs.out)
+
+    //Index BAM file
+    Sambamba_Index_Deduplex(PICARD_FilterSamReads.out)
+
+    Bam_file = PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out
+        .map{bam_file, bai_file -> bai_file}
+    ).map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
 
     if (params.method == "wgs"){
-
         //Phasing BAM
-        LongshotPhase(Sambamba_Merge.out)
+        LongshotPhase(Bam_file)
 
         // BAMIndex
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
     }
 
-
     if (params.method == "wgs_repeat"){
 
         //Phasing BAM
-        LongshotPhase(Sambamba_Merge.out)
+        LongshotPhase(Bam_file)
 
         // BAMIndex
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
@@ -128,9 +174,8 @@ workflow {
     }
   
     if (params.method == "wgs_roi"){
- 
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Sambamba_Merge.out.map{bam_file, bai_file -> bam_file})
+        Sambamba_Filter_ROI(Bam_file.map{bam_file, bai_file -> bam_file})
 
         //Phasing roi BAM
         LongshotPhase(Sambamba_Filter_ROI.out)
@@ -141,7 +186,7 @@ workflow {
 
     if (params.method == "wgs_roi_repeat"){
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Sambamba_Merge.out.map{bam_file, bai_file -> bam_file})
+        Sambamba_Filter_ROI(Bam_file.map{bam_file, bai_file -> bam_file})
 
         //Phasing roi BAM
         LongshotPhase(Sambamba_Filter_ROI.out)
@@ -179,10 +224,9 @@ workflow {
     }
 
     if (params.method == "wgs_splitcas9_repeat"){
-
         // BAM split based on Cas9 sites
-        SplitBAM(Sambamba_Merge.out)
- 
+        SplitBAM(Bam_file)
+
         ParseSampleIDs = Channel.fromPath( params.splitfile )
             .splitCsv( sep: '\t' )
             .map{sample_id, chromosome, start, stop -> [sample_id]}
@@ -197,9 +241,6 @@ workflow {
 
         // BAMIndex
         Sambamba_Index_Longshot(sample_id, LongshotPhase.out.map{sample_id, bam_file, vcf_file -> bam_file}.flatten())
-
-        //Index Phased BAMs
-        //Sambamba_Index_Longshot.out.join(ParseSampleIDs)
 
         //SplitPhasedBam
         Sambamba_Split(Sambamba_Index_Longshot.out)
@@ -229,33 +270,20 @@ workflow {
         STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
     }
 
-    //if (params.method == "targeted"){
-
-        // Make FASTQ files of ROI including tags
-        //Samtools_Fastq(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        // Re-map ROI fastq
-        //Minimap2_mapping(Samtools_Fastq.out)
-
-        // Sort SAM to BAM
-        //Sambamba_ViewSort(Minimap2_mapping.out)  
-
-    //}
-
     if (params.method == "targeted_splitcas9"){
 
         // Make FASTQ files of ROI including tags
-        //Samtools_Fastq(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]}) 
+        Samtools_Fastq(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]}) 
  
         // Re-map ROI fastq
-        //Minimap2_mapping(Samtools_Fastq.out)
+        Minimap2_target(Samtools_Fastq.out)
 
         // Sort SAM to BAM
-        //Sambamba_ViewSort(Minimap2_mapping.out)
+        Sambamba_ViewSort_target(Minimap2_target.out)
 
         // BAM split on cas9 sites
-        //SplitBAM(Sambamba_ViewSort.out)
-        SplitBAM(Sambamba_Merge.out)
+        SplitBAM(Sambamba_ViewSort_target.out)
+        //SplitBAM(Bam_file)
 
         ParseSampleIDs = Channel.fromPath( params.splitfile )
             .splitCsv( sep: '\t' )
@@ -278,16 +306,17 @@ workflow {
     if (params.method == "targeted_SMA_splitcas9"){
 
         // Make FASTQ files of ROI including tags
-        //Samtools_Fastq(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
+        Samtools_Fastq(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // Re-map ROI fastq
-        //Minimap2_mapping(Samtools_Fastq.out)
+        Minimap2_target(Samtools_Fastq.out)
 
         // Sort SAM to BAM
-        //Sambamba_ViewSort(Minimap2_mapping.out)
+        Sambamba_ViewSort_target(Minimap2_target.out)
 
         // BAM split based on Cas9 sites
-        SplitBAM(Sambamba_Merge.out)
+        //SplitBAM(Sambamba_Merge.out)
+        SplitBAM(Bam_file)
 
         // Variant calling
         ParsePloidy = Channel.fromPath( params.splitfile )
@@ -322,53 +351,60 @@ workflow {
     }
 
     if (params.method == "targeted_SMA_adaptive"){
-
-        // Variant calling on Paraphase variants
-        GATK_HaplotypeCaller_Paraphase(Sambamba_Merge.out
+        GATK_HaplotypeCaller_Paraphase(Bam_file
              .map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+
         // Filter SNV only Paraphase variants
         GATK_FilterSNV_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
+
         // Whatshapp polyphase Paraphase variants
         Whatshap_Phase_Target_Paraphase(GATK_FilterSNV_Paraphase.out)
+
         // bgzip and index VCF Paraphase variants
         Tabix_Zip_Index_Paraphase(Whatshap_Phase_Target_Paraphase.out)
+
         // Whatshapp haplotag Paraphase variants
         Whatshap_Haplotag_Target_Paraphase(
             GATK_HaplotypeCaller_Paraphase.out
             .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
             .join(Tabix_Zip_Index_Paraphase.out)
         )
+
         // Index BAM file and publish Paraphase variants
         Sambamba_Index_Target_Paraphase(Whatshap_Haplotag_Target_Paraphase.out)
 
 
         // Variant calling on used defined region
-        GATK_HaplotypeCaller_Region(Sambamba_Merge.out
+        GATK_HaplotypeCaller_Region(Bam_file
              .map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+
         // Whatshapp polyphase region
         Whatshap_Phase_Target_Region(GATK_HaplotypeCaller_Region.out
             .map{sample_id, bam_file, bai_file, vcf, vcf_index, ploidy -> [sample_id, bam_file, bai_file, vcf, ploidy]}
         )
+
         // bgzip and index VCF
         Tabix_Zip_Index_Region(Whatshap_Phase_Target_Region.out)
+
         // Whatshapp haplotag
         Whatshap_Haplotag_Target_Region(
             GATK_HaplotypeCaller_Region.out
             .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
             .join(Tabix_Zip_Index_Region.out)
         )
+
         // Index BAM file and publish region variants
         Sambamba_Index_Target_Region(Whatshap_Haplotag_Target_Region.out)
     }
 
 
     // QC stats
-    //PICARD_CollectMultipleMetrics(Sambamba_Merge.out)
-    //PICARD_CollectWgsMetrics(Sambamba_Merge.out)
-    //MultiQC(analysis_id, Channel.empty().mix(
-    //    PICARD_CollectMultipleMetrics.out,
-    //    PICARD_CollectWgsMetrics.out
-    //).collect())
+    PICARD_CollectMultipleMetrics(Bam_file)
+    PICARD_CollectWgsMetrics(Bam_file)
+    MultiQC(analysis_id, Channel.empty().mix(
+        PICARD_CollectMultipleMetrics.out,
+        PICARD_CollectWgsMetrics.out
+    ).collect())
 
     // Create log files: Repository versions and Workflow params
     VersionLog()
@@ -414,7 +450,7 @@ process ReBasecallingGuppy{
         val(sample_id)
 
     output:
-        tuple(path("pass/*.fastq.gz"), path("workspace/fast5_pass/*.fast5"), path ("*"), path("pass/*.bam"))
+        tuple(path("pass/*.fastq.gz"), path("workspace/fast5_pass/*.fast5"), path ("*"), path("pass/*.bam"), path("sequencing_summary.txt"))
         //tuple(path("pass/*.fastq.gz"), path("workspace/*.fast5"), path ("*"), path("pass/*.bam"))
 
     script:
