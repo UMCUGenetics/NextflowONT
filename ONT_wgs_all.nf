@@ -129,19 +129,19 @@ workflow {
         // Sort SAM to BAM
         Sambamba_ViewSort_remap(Minimap2_remap.out)
 
-        Bam_file = Sambamba_ViewSort_remap.out
+        Bam_file = Sambamba_ViewSort_remap.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
     }
     else{
          // Add readgroup to BAMs
         Samtools_AddReadgroup(sample_id, PICARD_FilterSamReads.out.combine(Sambamba_Index_Deduplex.out.map{bam_file, bai_file -> bai_file}))
         Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out)        
-        Bam_file = Samtools_AddReadgroup.out.combine(Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file})
+        Bam_file = Samtools_AddReadgroup.out.combine(Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file}).map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
     }
 
 
     if (params.method == "wgs"){
         //Phasing BAM
-        LongshotPhase(Bam_file)
+        LongshotPhase(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // BAMIndex
         Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
@@ -150,7 +150,7 @@ workflow {
     if (params.method == "wgs_repeat"){
 
         //Phasing BAM
-        LongshotPhase(Bam_file)
+        LongshotPhase(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // BAMIndex
         Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
@@ -186,7 +186,7 @@ workflow {
   
     if (params.method == "wgs_roi"){
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file)
+        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         //Phasing roi BAM
         LongshotPhase_ROI(Sambamba_Filter_ROI.out)
@@ -197,7 +197,7 @@ workflow {
 
     if (params.method == "wgs_roi_repeat"){
         // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file)
+        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         //Phasing roi BAM
         LongshotPhase_ROI(Sambamba_Filter_ROI.out)
@@ -236,16 +236,17 @@ workflow {
 
     if (params.method == "wgs_splitcas9_repeat"){
         // BAM split based on Cas9 sites
-        SplitBAM(Bam_file)
+        SplitBAM(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         ParseSampleIDs = Channel.fromPath( params.splitfile )
             .splitCsv( sep: '\t' )
             .map{sample_id, chromosome, start, stop -> [sample_id]}
             .unique()
+
         //Phasing BAMs
         LongshotPhase_Split(SplitBAM.out.transpose()
             .map { tuple(it) }
-            .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
+            .map{bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
             .join(ParseSampleIDs)
             .map{sample_id, bam_file, bai_file -> [bam_file, bai_file]}
         )
@@ -280,18 +281,19 @@ workflow {
         STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
         STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
 
+
         Bam_file = SplitBAM.out.transpose()
             .map { tuple(it) }
-            .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
+            .map{bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
             .join(ParseSampleIDs)
 
     }
 
     if (params.method == "SMA_splitcas9"){
+        // Under development.
 
         // BAM split based on Cas9 sites
-        SplitBAM(Bam_file)
-
+        SplitBAM(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // Variant calling
         //ParsePloidy = Channel.fromPath( params.splitfile )
@@ -327,7 +329,7 @@ workflow {
 
     if (params.method == "SMA_adaptive"){
         // Variant calling
-        GATK_HaplotypeCaller_Paraphase(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+        GATK_HaplotypeCaller_Paraphase(Bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
         // Filter SNV only Paraphase variants
         GATK_FilterSNV_Target_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
@@ -358,9 +360,9 @@ workflow {
         Sambamba_Index_Target_Paraphase(Whatshap_Haplotag_Target_Paraphase.out)
 
         // Variant calling on used defined region
-        GATK_HaplotypeCaller_Region(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
+        GATK_HaplotypeCaller_Region(Bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]})
 
-        //
+        //Filter SNV only region variants
         GATK_FilterSNV_Target_Region(GATK_HaplotypeCaller_Region.out)
 
         // Whatshapp polyphase region
@@ -391,8 +393,8 @@ workflow {
 
 
     // QC stats
-    PICARD_CollectMultipleMetrics(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-    PICARD_CollectWgsMetrics(Bam_file.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
+    PICARD_CollectMultipleMetrics(Bam_file)
+    PICARD_CollectWgsMetrics(Bam_file)
     MultiQC(analysis_id, Channel.empty().mix(
         PICARD_CollectMultipleMetrics.out,
         PICARD_CollectWgsMetrics.out
