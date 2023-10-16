@@ -2,74 +2,48 @@
 nextflow.preview.dsl=2
 
 // Utils modules
-include ExportParams as Workflow_ExportParams from './NextflowModules/Utils/workflow.nf'
-
-include Index as Sambamba_Index from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include AddReadgroup as Samtools_AddReadgroup from './NextflowModules/Samtools/1.15/AddReadgroup.nf'
-include Merge as Sambamba_Merge from './NextflowModules/Sambamba/0.7.0/Merge.nf' 
-include Filter_ROI as Sambamba_Filter_ROI from './NextflowModules/Sambamba/0.7.0/Filter.nf'
-include Filter_Condition as Sambamba_Filter_Condition from './NextflowModules/Sambamba/0.7.0/Filter.nf' params(conditions: params.conditions)
-include Split as Sambamba_Split from './NextflowModules/Sambamba/0.7.0/Split.nf'
-include Index as Sambamba_Index_Longshot from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include Index as Sambamba_Index_Deduplex from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include Index as Sambamba_Index_ReadGroup from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include LongshotPhase from './NextflowModules/Longshot/0.4.1/Phase.nf'
-include LongshotPhase as LongshotPhase_ROI from './NextflowModules/Longshot/0.4.1/Phase.nf'
-include LongshotPhase as LongshotPhase_Split from './NextflowModules/Longshot/0.4.1/Phase.nf'
-include PairsFromSummary as Duplex_PairsFromSummary from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
-include FilterPairs as Duplex_FilterPairs from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
-include FilterSamReads as PICARD_FilterSamReads from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
-
-include ToSAM as Sambamba_ToSam from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
-include ToSAM as Sambamba_ToSam_hap1 from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
-include ToSAM as Sambamba_ToSam_hap2 from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
-include ToSAM as Sambamba_ToSam_nohap from './NextflowModules/Sambamba/0.7.0/ToSAM.nf'
-include GetReadIDs as Sambamba_GetReadIDs from './NextflowModules/Sambamba/0.7.0/GetReads.nf'
-include GetReadIDs as Sambamba_GetReadIDs_hap1 from './NextflowModules/Sambamba/0.7.0/GetReads.nf'
-include GetReadIDs as Sambamba_GetReadIDs_hap2 from './NextflowModules/Sambamba/0.7.0/GetReads.nf'
-include GetReadIDs as Sambamba_GetReadIDs_nohap from './NextflowModules/Sambamba/0.7.0/GetReads.nf'
-include Index as STRiqueIndex from './NextflowModules/STRique/0.4.2/Index.nf'
-include CallRepeat as STRiqueCallRepeat from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
-include CallRepeat as STRiqueCallRepeat_hap1 from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
-include CallRepeat as STRiqueCallRepeat_hap2 from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
-include CallRepeat as STRiqueCallRepeat_nohap from './NextflowModules/STRique/0.4.2/CallRepeats.nf'
-
-include Fastq as Samtools_Fastq from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
-include Mapping as Minimap2_remap from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
-include ViewSort as Sambamba_ViewSort_target from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
-include ViewSort as Sambamba_ViewSort_remap from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
-
-
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
-include FilterVcfs as GATK_FilterSNV_Target_Paraphase from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include Phase as Whatshap_Phase_Target_Paraphase from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
-include Haplotag as Whatshap_Haplotag_Target_Paraphase from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
-include Zip_Index as Tabix_Zip_Index_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
-include Zip_Index as Tabix_Zip_Index_Bedtools_Paraphase from './NextflowModules/Tabix/1.11/Index.nf'
-include Index as Sambamba_Index_Target_Paraphase from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include Annotate as Bedtools_Annotate_Paraphase from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { AddReadgroup as Samtools_AddReadgroup } from './NextflowModules/Samtools/1.15/AddReadgroup.nf'
+include { Annotate as Bedtools_Annotate_Paraphase } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
+include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
+include { ExportParams as Workflow_ExportParams } from './NextflowModules/Utils/workflow.nf'
+include { Fastq as Samtools_Fastq } from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
+include { Filter_Condition as Sambamba_Filter_Condition } from './NextflowModules/Sambamba/0.7.0/Filter.nf' params(conditions: params.conditions)
+include { FilterPairs as Duplex_FilterPairs } from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
+include { FilterSamReads as PICARD_FilterSamReads } from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
+include { FilterVcfs as GATK_FilterSNV_Target_Paraphase } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include { FilterVcfs as GATK_FilterSNV_Target_Region } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include { Haplotag as Whatshap_Haplotag_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
+include { Haplotag as Whatshap_Haplotag_Target_Region } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
+include { Index as Sambamba_Index_Longshot } from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include { Index as Sambamba_Index_Deduplex } from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include { Index as Sambamba_Index_ReadGroup } from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include { Index as Sambamba_Index_Target_Paraphase } from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include { Index as Sambamba_Index_Target_Region } from './NextflowModules/Sambamba/0.7.0/Index.nf'
+include { LongshotPhase } from './NextflowModules/Longshot/0.4.1/Phase.nf'
+include { Mapping as Minimap2_remap } from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
+include { Merge as Sambamba_Merge } from './NextflowModules/Sambamba/0.7.0/Merge.nf' 
+include { MultiQC } from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
+include { PairsFromSummary as Duplex_PairsFromSummary } from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
+include { Phase as Whatshap_Phase_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include { Phase as Whatshap_Phase_Target_Region } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include { ViewSort as Sambamba_ViewSort_remap } from './NextflowModules/Sambamba/0.7.0/ViewSort.nf'
 include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Paraphase } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-
-include HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
-include FilterVcfs as GATK_FilterSNV_Target_Region from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include Phase as Whatshap_Phase_Target_Region from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
-include Haplotag as Whatshap_Haplotag_Target_Region from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
-include Zip_Index as Tabix_Zip_Index_Region from './NextflowModules/Tabix/1.11/Index.nf'
-include Zip_Index as Tabix_Zip_Index_Bedtools_Region from './NextflowModules/Tabix/1.11/Index.nf'
-include Index as Sambamba_Index_Target_Region from './NextflowModules/Sambamba/0.7.0/Index.nf'
-include Annotate as Bedtools_Annotate_Region from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
+include { Zip_Index as Tabix_Zip_Index_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
+include { Zip_Index as Tabix_Zip_Index_Region } from './NextflowModules/Tabix/1.11/Index.nf'
+include { Zip_Index as Tabix_Zip_Index_Bedtools_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
+include { Zip_Index as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/Tabix/1.11/Index.nf'
 
-
-include CollectMultipleMetrics as PICARD_CollectMultipleMetrics from './NextflowModules/Picard/2.22.0/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
-include CollectWgsMetrics as PICARD_CollectWgsMetrics from './NextflowModules/Picard/2.22.0/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
-include MultiQC from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 
 def analysis_id = params.outdir.split('/')[-1]
 sample_id = params.sample_id
@@ -147,185 +121,6 @@ workflow {
         Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
     }
 
-    if (params.method == "wgs_repeat"){
-
-        //Phasing BAM
-        LongshotPhase(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        // BAMIndex
-        Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
-     
-        //SplitPhasedBam
-        Sambamba_Split(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-
-        //Convert BAM to SAM
-        Sambamba_ToSam(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        // Get ReadIDs
-        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        //STRique index
-        STRiqueIndex(fast5_files.flatten())
-
-        //Concat all fofn files
-        ConcatFofn(STRiqueIndex.out.collect(), sample_id)
-
-        //Repeat calling
-        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
-
-    }
-  
-    if (params.method == "wgs_roi"){
-        // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        //Phasing roi BAM
-        LongshotPhase_ROI(Sambamba_Filter_ROI.out)
-
-        // BAMIndex
-        Sambamba_Index_Longshot(LongshotPhase_ROI.out.map{bam_file, vcf_file -> bam_file}.flatten())
-    }
-
-    if (params.method == "wgs_roi_repeat"){
-        // Filter BAM on roi
-        Sambamba_Filter_ROI(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        //Phasing roi BAM
-        LongshotPhase_ROI(Sambamba_Filter_ROI.out)
-
-        // BAMIndex
-        Sambamba_Index_Longshot(LongshotPhase_ROI.out.map{bam_file, vcf_file -> bam_file}.flatten())
-
-        //SplitPhasedBam
-        Sambamba_Split(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-
-        //Convert BAM to SAM
-        Sambamba_ToSam(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        // Get ReadIDs
-        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        //STRique index
-        STRiqueIndex(fast5_files.flatten())
-
-        //Concat all fofn files
-        ConcatFofn(STRiqueIndex.out.collect(), sample_id)
-
-        //Repeat calling
-        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
-
-    }
-
-    if (params.method == "wgs_splitcas9_repeat"){
-        // BAM split based on Cas9 sites
-        SplitBAM(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        ParseSampleIDs = Channel.fromPath( params.splitfile )
-            .splitCsv( sep: '\t' )
-            .map{sample_id, chromosome, start, stop -> [sample_id]}
-            .unique()
-
-        //Phasing BAMs
-        LongshotPhase_Split(SplitBAM.out.transpose()
-            .map { tuple(it) }
-            .map{bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
-            .join(ParseSampleIDs)
-            .map{sample_id, bam_file, bai_file -> [bam_file, bai_file]}
-        )
-
-        // BAMIndex
-        Sambamba_Index_Longshot(LongshotPhase_Split.out.map{bam_file, vcf_file -> bam_file}.flatten())
-
-        //SplitPhasedBam
-        Sambamba_Split(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-
-        //Convert BAM to SAM
-        Sambamba_ToSam(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_ToSam_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_ToSam_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_ToSam_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        // Get ReadIDs
-        Sambamba_GetReadIDs(Sambamba_Index_Longshot.out.map{bam_file, bai_file -> [sample_id, bam_file, bai_file]})
-        Sambamba_GetReadIDs_hap1(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap1_bam, hap1_bai]})
-        Sambamba_GetReadIDs_hap2(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, hap2_bam, hap2_bai]})
-        Sambamba_GetReadIDs_nohap(Sambamba_Split.out.map{sample_id, hap1_bam, hap1_bai, hap2_bam, hap2_bai, nohap_bam, nohap_bai -> [sample_id, nohap_bam, nohap_bai]})
-
-        //STRique index
-        STRiqueIndex(fast5_files.flatten())
-
-        //Concat all fofn files
-        ConcatFofn(STRiqueIndex.out.collect(), sample_id)
-    
-        //Repeat calling
-        STRiqueCallRepeat(Sambamba_ToSam.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap1(Sambamba_ToSam_hap1.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_hap2(Sambamba_ToSam_hap2.out, ConcatFofn.out, fast5_files.collect())
-        STRiqueCallRepeat_nohap(Sambamba_ToSam_nohap.out, ConcatFofn.out, fast5_files.collect())
-
-
-        Bam_file = SplitBAM.out.transpose()
-            .map { tuple(it) }
-            .map{bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
-            .join(ParseSampleIDs)
-
-    }
-
-    if (params.method == "SMA_splitcas9"){
-        // Under development.
-
-        // BAM split based on Cas9 sites
-        SplitBAM(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
-
-        // Variant calling
-        //ParsePloidy = Channel.fromPath( params.splitfile )
-        //    .splitCsv( sep: '\t' )
-        //   .map{sample_id, chromosome, start, stop, ploidy -> [sample_id, ploidy]}
-        //    .unique()
- 
-        //GATK_HaplotypeCaller_Paraphase(SplitBAM.out.transpose()
-        //    .map { tuple(it) }
-        //    .map{sample_id, bam_file, bai_file -> [bam_file.simpleName.toString().split("_")[0], bam_file, bai_file]}
-        //    .join(ParsePloidy)
-        //)
-
-        // Filter SNV only
-        //GATK_FilterSNV(GATK_HaplotypeCaller_Paraphase.out)
-
-        // Whatshapp polyphase 
-        //Whatshap_Phase_Target(GATK_FilterSNV.out)
-     
-        // bgzip and index VCF
-        //Tabix_Zip_Index(Whatshap_Phase_Target.out)
-     
-        // Whatshapp haplotag
-        //Whatshap_Haplotag_Target(
-        //    GATK_HaplotypeCaller_Paraphase.out
-        //   .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file]}
-        //    .join(Tabix_Zip_Index.out)
-        //)
-
-        // Index BAM file and publish
-        //Sambamba_Index_Target(Whatshap_Haplotag_Target.out)
-    }
 
     if (params.method == "SMA_adaptive"){
         // Variant calling
