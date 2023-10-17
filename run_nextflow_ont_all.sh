@@ -17,41 +17,6 @@ if [ $method == "wgs" ]; then
     optional_params=( "${@:7}" )
 fi
 
-if [ $method == "wgs_repeat"  ]; then
-    echo " #### Running method wgs_repeat  ####"
-    strique_config='--strique_config '$7
-    optional_params=( "${@:8}" )
-fi
-
-if [ $method == "wgs_roi" ]; then
-    echo " #### Running method wgs + roi phasing  ####"
-    roi='--roi '$7
-    optional_params=( "${@:8}" )
-fi
-
-
-if [ $method == "wgs_roi_repeat" ]; then
-    echo " #### Running method wgs + roi phasing + repeat calling ####"
-    roi='--roi '$7
-    strique_config='--strique_config '$8
-    optional_params=( "${@:9}" )
-fi
-
-
-if [ $method == "wgs_splitcas9_repeat" ]; then
-    echo " #### Running method wgs + split cas9 ####"
-    splitfile='--splitfile '$7
-    strique_config='--strique_config '$8
-    optional_params=( "${@:9}" )
-fi
-
-
-if [ $method == "SMA_splitcas9" ]; then
-    echo " #### Running method targeted SMA specific + split cas9  ####"
-    splitfile='--splitfile '$7
-    optional_params=( "${@:8}" )
-fi
-
 
 if [ $method == "SMA_adaptive" ]; then
     echo " #### Running method targeted SMA specific + adaptive sequencing ####"
