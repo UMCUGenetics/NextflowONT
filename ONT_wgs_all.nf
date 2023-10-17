@@ -252,48 +252,6 @@ process ReBasecallingGuppy{
         """
 }
 
-process SplitBAM{
-    // Custom process to split BAM based on Cas9 start sites
-    tag {"SplitBAM ${bam_file}"}
-    label 'SplitBAM'
-    shell = ['/bin/bash', '-eo', 'pipefail']
-    //cache = false
-
-    input:
-        tuple(path(bam_file), path(bai_file))
-
-    output:
-        tuple("*split.bam", "*split.bam.bai")
-
-    script:
-        """
-        source /hpc/diaggen/users/Martin/Research_projects_Martin/SMA_project/venv/bin/activate
-        python /hpc/diaggen/users/Martin/Research_projects_Martin/SMA_project/split_bam_start_site.py $bam_file $params.splitfile --flanks 20
-        """
-}
-
-
-process ConcatFofn{
-    // Custom process to concat all fofn files
-    tag {"Concat Fofn ${sample_id}"}
-    label 'Concat_Fofn'
-    shell = ['/bin/bash', '-eo', 'pipefail']
-
-    input:
-        path(fofn_files)
-        val(sample_id)
-
-    output:
-        path("${sample_id}.fofn")
-
-    script:
-        fofn  = fofn_files.join(' ')
-        """
-        cat ${fofn} > ${sample_id}.fofn
-        """
-}
-
-
 process VersionLog {
     // Custom process to log repository versions
     tag {"VersionLog ${analysis_id}"}
