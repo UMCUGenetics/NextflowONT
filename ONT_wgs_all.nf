@@ -10,7 +10,7 @@ include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './NextflowModule
 include { ExportParams as Workflow_ExportParams } from './NextflowModules/Utils/workflow.nf'
 include { Fastq as Samtools_Fastq } from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
 include { FilterCondition as Sambamba_Filter_Condition } from './NextflowModules/Sambamba/1.0.0/Filter.nf' params(conditions: params.conditions)
-include { FilterHaplotype as Sambamba_Filter_Haplotype } from './NextflowModules/Sambamba/1.0.0/Filter.nf'
+include { FilterHaplotypePhaseset as Sambamba_Filter_Haplotype_Phaseset } from './NextflowModules/Sambamba/1.0.0/Filter.nf'
 include { FilterPairs as Duplex_FilterPairs } from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
 include { FilterSamReads as PICARD_FilterSamReads } from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
 include { FilterVcfs as GATK_FilterSNV_Target_Paraphase } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
@@ -214,18 +214,24 @@ workflow {
         // Index BAM file and publish region variants
         Sambamba_Index_Target_Region(Whatshap_Haplotag_Target_Region.out.map{bam_file -> [sample_id, bam_file]})
 
+
+        // Get correct phasegroup
+        Get_PhaseSet(GATK_VariantFiltration_Paraphase.out)
+
         // Split BAM into single haplotypes
-        Sambamba_Filter_Haplotype(Whatshap_Haplotag_Target_Paraphase.out.combine(
-            Sambamba_Index_Target_Region.out.map{sample_id, bai_file -> bai_file}
+        Sambamba_Filter_Haplotype_Phaseset(Whatshap_Haplotag_Target_Paraphase.out.combine(
+            Sambamba_Index_Target_Paraphase.out.map{sample_id, bai_file -> bai_file}
         ).combine(
             ploidy_list
+        ).combine(
+           Get_PhaseSet.out
         ))
 
         //Clair3 calling on haplotype BAMs
-        Clair3_VariantCaller(Sambamba_Filter_Haplotype.out)
+        Clair3_VariantCaller(Sambamba_Filter_Haplotype_Phaseset.out)
 
         //Sniffles SV variant calling on haplotype BAMs
-        Sniffles2_VariantCaller(Sambamba_Filter_Haplotype.out)
+        Sniffles2_VariantCaller(Sambamba_Filter_Haplotype_Phaseset.out)
 
     }
 
@@ -299,6 +305,27 @@ process ReBasecallingGuppy{
         --bam_out --fast5_out --align_ref $params.genome_mapping_index 
         """
 }
+
+process Get_PhaseSet {
+    tag { "Get_PhaseSet ${vcf_file.baseName}" }
+    label 'Get_PhaseSet'
+    container = 'quay.io/biocontainers/vcfpy:0.13.6--pyhdfd78af_0'
+    shell = ['/bin/bash', '-euo', 'pipefail']
+
+    input:
+        tuple(val(analysis_id), path(vcf_file), path(vcf_index_file))
+
+    output:
+        tuple(stdout)
+
+    script:
+        """
+        $baseDir/assets/get_phaseset.py \
+            $vcf_file \
+            $params.psv_region | tr -d '\n'
+        """
+}
+
 
 process VersionLog {
     // Custom process to log repository versions
