@@ -24,9 +24,12 @@ include { Index as Sambamba_Index_Deduplex } from './NextflowModules/Sambamba/1.
 include { Index as Sambamba_Index_ReadGroup } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_Target_Paraphase } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_Target_Region } from './NextflowModules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Merge } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { LongshotPhase } from './NextflowModules/Longshot/0.4.1/Phase.nf'
 include { Mapping as Minimap2_remap } from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
-include { Merge as Sambamba_Merge } from './NextflowModules/Sambamba/1.0.0/Merge.nf' 
+include { Merge as Samtools_Merge } from './NextflowModules/Samtools/1.15/Merge.nf'
+
+
 include { MultiQC } from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 include { PairsFromSummary as Duplex_PairsFromSummary } from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
 include { Phase as Whatshap_Phase_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
@@ -87,11 +90,19 @@ workflow {
     }
 
     // MergeSort BAMs
-    Sambamba_Merge(bam_files.map{bam_files -> [sample_id, bam_files]})
+    Samtools_Merge(bam_files.map{bam_files -> [sample_id, bam_files]})
+
+    // Index MergeSort BAM
+    Sambamba_Index_Merge(Samtools_Merge.out)
 
     // Filter for minimum readlength
-    Sambamba_Filter_Condition(Sambamba_Merge.out.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
- 
+    Sambamba_Filter_Condition(Samtools_Merge.out
+        .map{ sample_id, bam_file -> bam_file }
+        .combine(Sambamba_Index_Merge.out
+            .map{ sample_id, bai_file -> bai_file }
+        )
+    )
+
     // Identify readpairs
     Duplex_PairsFromSummary(sample_id, summary_file)
 
