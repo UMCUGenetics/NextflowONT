@@ -23,6 +23,7 @@ rebase = include re-basecalling\
 bam = start from Guppy folder including bam files.\
 bam_remap = start from Guppy folder including bam files, but perform remapping to genome in config.
 bam_single = start from single bam file (should be only bam in the folder) without any Guppy/ONT information.
+bam_single_remap = start from single bam file (should be only bam in the folder) without any Guppy/ONT information and perform remapping.
 \
 
 | Method | Description | Optional parameters needed|
