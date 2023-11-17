@@ -22,6 +22,7 @@ nextflow run ONT.nf -c ONT.config --fastq_path <fastq_dir_path> --outdir <output
 rebase = include re-basecalling\
 bam = start from Guppy folder including bam files.\
 bam_remap = start from Guppy folder including bam files, but perform remapping to genome in config.
+bam_single = start from single bam file (should be only bam in the folder) without any Guppy/ONT information.
 \
 
 | Method | Description | Optional parameters needed|
