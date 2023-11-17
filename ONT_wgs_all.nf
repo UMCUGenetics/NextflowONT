@@ -66,6 +66,10 @@ workflow {
         bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
         summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
     }
+    else if( params.start == 'bam_single' ){
+        //Get BAM file, and only BAM file as fast5 and summary are not available
+        bam_file = Channel.fromPath(params.input_path +  "/*.bam").toList()
+    }
     else if( params.start == 'rebase' ){
         //Re-basecalling
         fast5 = Channel.fromPath(params.input_path +  "/fast5_*/*.fast5").toList()
@@ -85,41 +89,56 @@ workflow {
             Invalid alignment mode: ${params.start}. 
             This should be bam (start from basecalled data), 
             bam_remap (start from bam, but perform remapping with minimap2), 
+            bam_single (start from single bam without sequencing information),
             or rebase (full re-basecalling)
         """
     }
 
-    // MergeSort BAMs
-    Samtools_Merge(bam_files.map{bam_files -> [sample_id, bam_files]})
+    if( params.start == 'bam_single' ){
+        // Index MergeSort BAM
+        Sambamba_Index_Merge(bam_file.map{bam_file -> [sample_id, bam_file]})
 
-    // Index MergeSort BAM
-    Sambamba_Index_Merge(Samtools_Merge.out)
+        // Filter for minimum readlength
+        Sambamba_Filter_Condition(bam_file.combine(Sambamba_Index_Merge.out.map{sample_id, bai_file -> bai_file}))
 
-    // Filter for minimum readlength
-    Sambamba_Filter_Condition(Samtools_Merge.out
-        .map{ sample_id, bam_file -> bam_file }
-        .combine(Sambamba_Index_Merge.out
-            .map{ sample_id, bai_file -> bai_file }
+        bam_file_filtered = Sambamba_Filter_Condition.out
+    }
+    else{
+        // MergeSort BAMs
+        Samtools_Merge(bam_files.map{bam_files -> [sample_id, bam_files]})
+
+        // Index MergeSort BAM
+        Sambamba_Index_Merge(Samtools_Merge.out)
+
+        // Filter for minimum readlength
+        Sambamba_Filter_Condition(Samtools_Merge.out
+            .map{ sample_id, bam_file -> bam_file }
+            .combine(Sambamba_Index_Merge.out
+                .map{ sample_id, bai_file -> bai_file }
+            )
         )
-    )
 
-    // Identify readpairs
-    Duplex_PairsFromSummary(sample_id, summary_file)
+        // Identify readpairs
+        Duplex_PairsFromSummary(sample_id, summary_file)
 
-    // Identify possible duplex reads from read pairs
-    Duplex_FilterPairs(Duplex_PairsFromSummary.out, Sambamba_Filter_Condition.out)
+        // Identify possible duplex reads from read pairs
+        Duplex_FilterPairs(Duplex_PairsFromSummary.out, Sambamba_Filter_Condition.out)
 
-    //Filter BAM for duplicate duplex read
-    PICARD_FilterSamReads(Sambamba_Filter_Condition.out, Duplex_FilterPairs.out)
+        //Filter BAM for duplicate duplex read
+        PICARD_FilterSamReads(Sambamba_Filter_Condition.out, Duplex_FilterPairs.out)
 
-    //Index BAM file
-    Sambamba_Index_Deduplex(PICARD_FilterSamReads.out.map{bam_file ->[sample_id, bam_file]})
+        //Index BAM file
+        Sambamba_Index_Deduplex(PICARD_FilterSamReads.out.map{bam_file ->[sample_id, bam_file]})
 
-    if( params.start == 'bam_remap' ){
-        // Extract FASTQ from BAM
-        Samtools_Fastq(PICARD_FilterSamReads.out.combine(
+        bam_file_filtered = PICARD_FilterSamReads.out.combine(
             Sambamba_Index_Deduplex.out.map{sample_id, bai_file -> bai_file}
-        ))
+        )
+
+    }
+
+    if( params.start == 'bam_remap' || params.start == 'bam_single' ){
+        // Extract FASTQ from BAM
+        Samtools_Fastq(bam_file_filtered)
 
          // Re-map ROI fastq
         Minimap2_remap(Samtools_Fastq.out)
@@ -131,9 +150,8 @@ workflow {
     }
     else{
          // Add readgroup to BAMs
-        Samtools_AddReadgroup(sample_id, PICARD_FilterSamReads.out.combine(
-            Sambamba_Index_Deduplex.out.map{bam_file, bai_file -> bai_file}
-        ))
+        Samtools_AddReadgroup(sample_id, bam_file_filtered)
+
         Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out)        
         Bam_file = Samtools_AddReadgroup.out.combine(
             Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file})
