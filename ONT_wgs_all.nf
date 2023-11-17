@@ -28,8 +28,6 @@ include { Index as Sambamba_Index_Merge } from './NextflowModules/Sambamba/1.0.0
 include { LongshotPhase } from './NextflowModules/Longshot/0.4.1/Phase.nf'
 include { Mapping as Minimap2_remap } from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
 include { Merge as Samtools_Merge } from './NextflowModules/Samtools/1.15/Merge.nf'
-
-
 include { MultiQC } from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 include { PairsFromSummary as Duplex_PairsFromSummary } from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
 include { Phase as Whatshap_Phase_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
@@ -66,7 +64,7 @@ workflow {
         bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
         summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
     }
-    else if( params.start == 'bam_single' ){
+    else if( params.start == 'bam_single' || params.start == 'bam_single_remap'){
         //Get BAM file, and only BAM file as fast5 and summary are not available
         bam_file = Channel.fromPath(params.input_path +  "/*.bam").toList()
     }
@@ -90,11 +88,12 @@ workflow {
             This should be bam (start from basecalled data), 
             bam_remap (start from bam, but perform remapping with minimap2), 
             bam_single (start from single bam without sequencing information),
+            bam_single_remap (start from single bam without sequencing information and perform remapping),
             or rebase (full re-basecalling)
         """
     }
 
-    if( params.start == 'bam_single' ){
+    if( params.start == 'bam_single' ||  params.start == 'bam_single_remap' ){
         // Index MergeSort BAM
         Sambamba_Index_Merge(bam_file.map{bam_file -> [sample_id, bam_file]})
 
@@ -136,7 +135,7 @@ workflow {
 
     }
 
-    if( params.start == 'bam_remap' || params.start == 'bam_single' ){
+    if( params.start == 'bam_remap' || params.start == 'bam_single_remap' ){
         // Extract FASTQ from BAM
         Samtools_Fastq(bam_file_filtered)
 
@@ -152,9 +151,9 @@ workflow {
          // Add readgroup to BAMs
         Samtools_AddReadgroup(sample_id, bam_file_filtered)
 
-        Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out)        
+        Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out.map{bam_file -> [sample_id, bam_file]})
         Bam_file = Samtools_AddReadgroup.out.combine(
-            Sambamba_Index_ReadGroup.out.map{bam_file, bai_file -> bai_file})
+            Sambamba_Index_ReadGroup.out.map{sample_id, bai_file -> bai_file})
             .map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
     }
 
