@@ -3,6 +3,7 @@ nextflow.preview.dsl=2
 
 // Utils modules
 include { AddReadgroup as Samtools_AddReadgroup } from './NextflowModules/Samtools/1.15/AddReadgroup.nf'
+include { Annotate as Bedtools_Annotate_Clair3 } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { Annotate as Bedtools_Annotate_Paraphase } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './NextflowModules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
@@ -39,6 +40,10 @@ include { VariantCaller as Clair3_VariantCaller } from './NextflowModules/Clair3
     optional: " --haploid_precise --platform=ont --enable_long_indel"
 )
 include { VariantCaller as Sniffles2_VariantCaller } from "./NextflowModules/Sniffles2/2.2--pyhdfd78af_0/VariantCaller.nf" params(optional: "")
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Clair3 } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+    genome: "$params.genome_fasta", snp_filter: "$params.clair3_snp_filter",
+    snp_cluster: "$params.clair3_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
+)
 include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Paraphase } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
@@ -49,6 +54,7 @@ include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './N
 )
 include { ZipIndex as Tabix_Zip_Index_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Region } from './NextflowModules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/Tabix/1.11/Index.nf'
 
@@ -189,7 +195,7 @@ workflow {
             Tabix_Zip_Index_Paraphase.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
         ) 
 
-        //Index Homopolymer annotated BED file
+        //Index Homopolymer annotated VCF file
         Tabix_Zip_Index_Bedtools_Paraphase(Bedtools_Annotate_Paraphase.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF
@@ -226,7 +232,7 @@ workflow {
             Tabix_Zip_Index_Region.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
         )
 
-        //Index Homopolymer annotated BED file
+        //Index Homopolymer annotated VCF file
         Tabix_Zip_Index_Bedtools_Region(Bedtools_Annotate_Region.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF
@@ -257,6 +263,15 @@ workflow {
 
         //Clair3 calling on haplotype BAMs
         Clair3_VariantCaller(Sambamba_Filter_Haplotype_Phaseset.out)
+
+        // Annotate Clair3 VCF
+        Bedtools_Annotate_Clair3(Clair3_VariantCaller.out)
+
+        //Index Homopolymer annotated VCF file
+        Tabix_Zip_Index_Bedtools_Clair3(Bedtools_Annotate_Clair3.out.map{vcf_file -> [sample_id, vcf_file]})
+
+        //Filter VCF
+        GATK_VariantFiltration_Clair3(Tabix_Zip_Index_Bedtools_Clair3.out)
 
         //Sniffles SV variant calling on haplotype BAMs
         Sniffles2_VariantCaller(Sambamba_Filter_Haplotype_Phaseset.out)
