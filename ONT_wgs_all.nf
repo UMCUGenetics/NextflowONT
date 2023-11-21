@@ -2,7 +2,7 @@
 nextflow.preview.dsl=2
 
 // Utils modules
-include { AddReadgroup as Samtools_AddReadgroup } from './NextflowModules/Samtools/1.15/AddReadgroup.nf'
+include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './NextflowModules/Samtools/1.15/AddReplaceReadgroup.nf'
 include { Annotate as Bedtools_Annotate_Clair3 } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { Annotate as Bedtools_Annotate_Paraphase } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
@@ -156,12 +156,12 @@ workflow {
     }
 
     // Add readgroup to BAMs
-    Samtools_AddReadgroup(sample_id, bam_file)
+    Samtools_AddReplaceReadgroup(sample_id, bam_file)
 
     // Index RG BAM
-    Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out.map{bam_file -> [sample_id, bam_file]})
+    Sambamba_Index_ReadGroup(Samtools_AddReplaceReadgroup.out.map{bam_file -> [sample_id, bam_file]})
 
-    bam_file = Samtools_AddReadgroup.out.combine(
+    bam_file = Samtools_AddReplaceReadgroup.out.combine(
         Sambamba_Index_ReadGroup.out.map{sample_id, bai_file -> bai_file})
         .map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
 
