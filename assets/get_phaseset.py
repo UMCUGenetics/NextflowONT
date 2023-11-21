@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--freq',
         type=float,
-        default=0.7,
+        default=0.65,
         help='threshold to determine most likely PS if multiple are detected in roi [default = 0.7]'
     )
     args = parser.parse_args()
