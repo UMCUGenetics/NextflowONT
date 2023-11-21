@@ -106,7 +106,7 @@ workflow {
         // Filter for minimum readlength
         Sambamba_Filter_Condition(bam_file.combine(Sambamba_Index_Merge.out.map{sample_id, bai_file -> bai_file}))
 
-        bam_file_filtered = Sambamba_Filter_Condition.out
+        bam_file = Sambamba_Filter_Condition.out
     }
     else{
         // MergeSort BAMs
@@ -135,7 +135,7 @@ workflow {
         //Index BAM file
         Sambamba_Index_Deduplex(PICARD_FilterSamReads.out.map{bam_file ->[sample_id, bam_file]})
 
-        bam_file_filtered = PICARD_FilterSamReads.out.combine(
+        bam_file = PICARD_FilterSamReads.out.combine(
             Sambamba_Index_Deduplex.out.map{sample_id, bai_file -> bai_file}
         )
 
@@ -143,30 +143,32 @@ workflow {
 
     if( params.start == 'bam_remap' || params.start == 'bam_single_remap' ){
         // Extract FASTQ from BAM
-        Samtools_Fastq(bam_file_filtered)
+        Samtools_Fastq(bam_file)
 
          // Re-map ROI fastq
         Minimap2_remap(Samtools_Fastq.out)
 
         // Sort SAM to BAM
         Sambamba_ViewSort_remap(Minimap2_remap.out.map{fastq, sam_file -> [sample_id, fastq , sam_file]})
+    
+        bam_file = Sambamba_ViewSort_remap.out.map{sample_id, rg_id, bam_file, bai_file -> [bam_file, bai_file]} 
 
-        Bam_file = Sambamba_ViewSort_remap.out.map{sample_id, rg_id, bam_file, bai_file -> [sample_id, bam_file, bai_file]}
     }
-    else{
-         // Add readgroup to BAMs
-        Samtools_AddReadgroup(sample_id, bam_file_filtered)
 
-        Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out.map{bam_file -> [sample_id, bam_file]})
-        Bam_file = Samtools_AddReadgroup.out.combine(
-            Sambamba_Index_ReadGroup.out.map{sample_id, bai_file -> bai_file})
-            .map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
-    }
+    // Add readgroup to BAMs
+    Samtools_AddReadgroup(sample_id, bam_file)
+
+    // Index RG BAM
+    Sambamba_Index_ReadGroup(Samtools_AddReadgroup.out.map{bam_file -> [sample_id, bam_file]})
+
+    bam_file = Samtools_AddReadgroup.out.combine(
+        Sambamba_Index_ReadGroup.out.map{sample_id, bai_file -> bai_file})
+        .map{bam_file, bai_file -> [sample_id, bam_file, bai_file]}
 
 
     if (params.method == "wgs"){
         //Phasing BAM
-        LongshotPhase(Bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
+        LongshotPhase(bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // BAMIndex
         Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
@@ -176,7 +178,7 @@ workflow {
     if (params.method == "SMA_adaptive"){
         // Variant calling
         GATK_HaplotypeCaller_Paraphase(
-            Bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]}
+            bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]}
         )
 
         // Filter SNV only Paraphase variants
@@ -213,7 +215,7 @@ workflow {
 
         // Variant calling on used defined region
         GATK_HaplotypeCaller_Region(
-            Bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]}
+            bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]}
         )
 
         //Filter SNV only region variants
@@ -280,8 +282,8 @@ workflow {
 
 
     // QC stats
-    PICARD_CollectMultipleMetrics(Bam_file)
-    PICARD_CollectWgsMetrics(Bam_file)
+    PICARD_CollectMultipleMetrics(bam_file)
+    PICARD_CollectWgsMetrics(bam_file)
     MultiQC(analysis_id, Channel.empty().mix(
         PICARD_CollectMultipleMetrics.out,
         PICARD_CollectWgsMetrics.out
