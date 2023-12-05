@@ -9,7 +9,7 @@ include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtool
 include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './NextflowModules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './NextflowModules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
 include { ExportParams as Workflow_ExportParams } from './NextflowModules/Utils/workflow.nf'
-include { Fastq as Samtools_Fastq } from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml ", , roi: params.roi)
+include { Fastq as Samtools_Fastq } from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml,MM,ML ", , roi: params.roi)
 include { FilterCondition as Sambamba_Filter_Condition } from './NextflowModules/Sambamba/1.0.0/Filter.nf' params(conditions: params.conditions)
 include { FilterHaplotypePhaseset as Sambamba_Filter_Haplotype_Phaseset } from './NextflowModules/Sambamba/1.0.0/Filter.nf'
 include { FilterPairs as Duplex_FilterPairs } from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
