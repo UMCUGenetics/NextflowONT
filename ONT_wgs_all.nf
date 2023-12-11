@@ -61,8 +61,10 @@ include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/
 
 def analysis_id = params.outdir.split('/')[-1]
 sample_id = params.sample_id
-ploidy_list = Channel.of(1..params.ploidy)
 
+if (params.method == "SMA_adaptive"){
+    ploidy_list = Channel.of(1..params.ploidy)
+}
 
 workflow {
     if( params.start == 'bam' ){
