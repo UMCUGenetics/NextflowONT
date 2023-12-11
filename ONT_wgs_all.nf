@@ -4,7 +4,7 @@ nextflow.preview.dsl=2
 // Utils modules
 include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './NextflowModules/Samtools/1.15/AddReplaceReadgroup.nf'
 include { Annotate as Bedtools_Annotate_Clair3 } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Paraphase } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Bed } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
 include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './NextflowModules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './NextflowModules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
@@ -14,16 +14,16 @@ include { FilterCondition as Sambamba_Filter_Condition } from './NextflowModules
 include { FilterHaplotypePhaseset as Sambamba_Filter_Haplotype_Phaseset } from './NextflowModules/Sambamba/1.0.0/Filter.nf'
 include { FilterPairs as Duplex_FilterPairs } from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
 include { FilterSamReads as PICARD_FilterSamReads } from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
-include { FilterVcfs as GATK_FilterSNV_Target_Paraphase } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include { FilterVcfs as GATK_FilterSNV_Target_Bed } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include { FilterVcfs as GATK_FilterSNV_Target_Region } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Paraphase } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_paraphase", optional:"--intervals $params.calling_target_paraphase --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Bed } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_bed", optional:"--intervals $params.calling_target_bed --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
-include { Haplotag as Whatshap_Haplotag_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_paraphase")
+include { Haplotag as Whatshap_Haplotag_Target_Bed } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_bed")
 include { Haplotag as Whatshap_Haplotag_Target_Region } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
 include { Index as Sambamba_Index_Longshot } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_Deduplex } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_ReadGroup } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_Target_Paraphase } from './NextflowModules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Target_Bed } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_Target_Region } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { Index as Sambamba_Index_Merge } from './NextflowModules/Sambamba/1.0.0/Index.nf'
 include { LongshotPhase } from './NextflowModules/Longshot/0.4.1/Phase.nf'
@@ -31,7 +31,7 @@ include { Mapping as Minimap2_remap } from './NextflowModules/Minimap2/2.26--he4
 include { Merge as Samtools_Merge } from './NextflowModules/Samtools/1.15/Merge.nf'
 include { MultiQC } from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
 include { PairsFromSummary as Duplex_PairsFromSummary } from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
-include { Phase as Whatshap_Phase_Target_Paraphase } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include { Phase as Whatshap_Phase_Target_Bed } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include { Phase as Whatshap_Phase_Target_Region } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include { ViewSort as Sambamba_ViewSort_remap } from './NextflowModules/Sambamba/1.0.0/ViewSort.nf'
 include { VariantCaller as Clair3_VariantCaller } from './NextflowModules/Clair3/1.0.4--py39hf5e1c6e_3/VariantCaller.nf' params(
@@ -44,7 +44,7 @@ include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Clair3 } from './N
     genome: "$params.genome_fasta", snp_filter: "$params.clair3_snp_filter",
     snp_cluster: "$params.clair3_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Paraphase } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Bed } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
@@ -52,10 +52,10 @@ include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './N
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { ZipIndex as Tabix_Zip_Index_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bed } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Region } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './NextflowModules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Paraphase } from './NextflowModules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bedtools_Bed } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/Tabix/1.11/Index.nf'
 
 def analysis_id = params.outdir.split('/')[-1]
@@ -177,41 +177,41 @@ workflow {
 
     if (params.method == "SMA_adaptive"){
         // Variant calling
-        GATK_HaplotypeCaller_Paraphase(
+        GATK_HaplotypeCaller_Bed(
             bam_file.map{sample_id, bam_file, bai_file -> [sample_id, bam_file, bai_file, params.ploidy]}
         )
 
-        // Filter SNV only Paraphase variants
-        GATK_FilterSNV_Target_Paraphase(GATK_HaplotypeCaller_Paraphase.out)
+        // Filter SNV only Bed-file variants
+        GATK_FilterSNV_Target_Bed(GATK_HaplotypeCaller_Bed.out)
 
-        // Whatshapp polyphase Paraphase variants
-        Whatshap_Phase_Target_Paraphase(GATK_FilterSNV_Target_Paraphase.out)
+        // Whatshapp polyphase Bed-file variants
+        Whatshap_Phase_Target_Bed(GATK_FilterSNV_Target_Bed.out)
 
-        // bgzip and index VCF Paraphase variants
-        Tabix_Zip_Index_Paraphase(
-            Whatshap_Phase_Target_Paraphase.out.map{sample_id, vcf_file, ploidy -> [sample_id, vcf_file]}
+        // bgzip and index VCF Bed-file variants
+        Tabix_Zip_Index_Bed(
+            Whatshap_Phase_Target_Bed.out.map{sample_id, vcf_file, ploidy -> [sample_id, vcf_file]}
         )
 
         //Annotate Homopolymer VCF
-        Bedtools_Annotate_Paraphase(
-            Tabix_Zip_Index_Paraphase.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
+        Bedtools_Annotate_Bed(
+            Tabix_Zip_Index_Bed.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
         ) 
 
         //Index Homopolymer annotated VCF file
-        Tabix_Zip_Index_Bedtools_Paraphase(Bedtools_Annotate_Paraphase.out.map{vcf_file -> [sample_id, vcf_file]})
+        Tabix_Zip_Index_Bedtools_Bed(Bedtools_Annotate_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF
-        GATK_VariantFiltration_Paraphase(Tabix_Zip_Index_Bedtools_Paraphase.out)
+        GATK_VariantFiltration_Bed(Tabix_Zip_Index_Bedtools_Bed.out)
 
-        // Whatshapp haplotag Paraphase variants
-        Whatshap_Haplotag_Target_Paraphase(
-            GATK_HaplotypeCaller_Paraphase.out
+        // Whatshapp haplotag Bed-file variants
+        Whatshap_Haplotag_Target_Bed(
+            GATK_HaplotypeCaller_Bed.out
             .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file, ploidy]}
-            .join(GATK_VariantFiltration_Paraphase.out)
+            .join(GATK_VariantFiltration_Bed.out)
         )
 
-        // Index BAM file and publish Paraphase variants
-        Sambamba_Index_Target_Paraphase(Whatshap_Haplotag_Target_Paraphase.out.map{bam_file -> [sample_id, bam_file]})
+        // Index BAM file and publish Bed-file variants
+        Sambamba_Index_Target_Bed(Whatshap_Haplotag_Target_Bed.out.map{bam_file -> [sample_id, bam_file]})
 
         // Variant calling on used defined region
         GATK_HaplotypeCaller_Region(
@@ -252,11 +252,11 @@ workflow {
 
 
         // Get correct phasegroup
-        Get_PhaseSet(GATK_VariantFiltration_Paraphase.out)
+        Get_PhaseSet(GATK_VariantFiltration_Bed.out)
 
         // Split BAM into single haplotypes
-        Sambamba_Filter_Haplotype_Phaseset(Whatshap_Haplotag_Target_Paraphase.out.combine(
-            Sambamba_Index_Target_Paraphase.out.map{sample_id, bai_file -> bai_file}
+        Sambamba_Filter_Haplotype_Phaseset(Whatshap_Haplotag_Target_Bed.out.combine(
+            Sambamba_Index_Target_Bed.out.map{sample_id, bai_file -> bai_file}
         ).combine(
             ploidy_list
         ).combine(
