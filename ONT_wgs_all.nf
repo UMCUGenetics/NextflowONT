@@ -58,12 +58,13 @@ include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './NextflowModules/
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Bed } from './NextflowModules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/Tabix/1.11/Index.nf'
 
+
 def analysis_id = params.outdir.split('/')[-1]
 sample_id = params.sample_id
 ploidy_list = Channel.of(1..params.ploidy)
 
-workflow {
 
+workflow {
     if( params.start == 'bam' ){
         // Get fast5 and mapped bams from input folder
         fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
@@ -90,14 +91,15 @@ workflow {
     }
     else{
         error  """
-            Invalid alignment mode: ${params.start}. 
-            This should be bam (start from basecalled data), 
-            bam_remap (start from bam, but perform remapping with minimap2), 
+            Invalid alignment mode: ${params.start}.
+            This should be bam (start from basecalled data),
+            bam_remap (start from bam, but perform remapping with minimap2),
             bam_single (start from single bam without sequencing information),
             bam_single_remap (start from single bam without sequencing information and perform remapping),
             or rebase (full re-basecalling)
         """
     }
+
 
     if( params.start == 'bam_single' ||  params.start == 'bam_single_remap' ){
         // Index MergeSort BAM
@@ -141,6 +143,7 @@ workflow {
 
     }
 
+
     if( params.start == 'bam_remap' || params.start == 'bam_single_remap' ){
         // Extract FASTQ from BAM
         Samtools_Fastq(bam_file)
@@ -150,15 +153,15 @@ workflow {
 
         // Sort SAM to BAM
         Sambamba_ViewSort_remap(Minimap2_remap.out.map{fastq, sam_file -> [sample_id, fastq , sam_file]})
-    
-        bam_file = Sambamba_ViewSort_remap.out.map{sample_id, rg_id, bam_file, bai_file -> [bam_file, bai_file]} 
+
+        bam_file = Sambamba_ViewSort_remap.out.map{sample_id, rg_id, bam_file, bai_file -> [bam_file, bai_file]}
 
     }
 
-    // Add readgroup to BAMs
+    // Add readgroup to BAM
     Samtools_AddReplaceReadgroup(sample_id, bam_file)
 
-    // Index RG BAM
+    // Index readgroup BAM
     Sambamba_Index_ReadGroup(Samtools_AddReplaceReadgroup.out.map{bam_file -> [sample_id, bam_file]})
 
     bam_file = Samtools_AddReplaceReadgroup.out.combine(
@@ -195,7 +198,7 @@ workflow {
         //Annotate Homopolymer VCF
         Bedtools_Annotate_Bed(
             Tabix_Zip_Index_Bed.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
-        ) 
+        )
 
         //Index Homopolymer annotated VCF file
         Tabix_Zip_Index_Bedtools_Bed(Bedtools_Annotate_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
@@ -279,7 +282,6 @@ workflow {
         Sniffles2_VariantCaller(Sambamba_Filter_Haplotype_Phaseset.out)
 
     }
-
 
     // QC stats
     PICARD_CollectMultipleMetrics(bam_file)
