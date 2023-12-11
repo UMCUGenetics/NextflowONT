@@ -1,6 +1,6 @@
 # NextflowONT
 Nextflow Oxford Nanopore Technologies workflow\
-Note: this workflow hase been tested on R9.4.1 sequencing data with guppy_6.1.2 basecalling only.
+Note: this workflow hase been tested on R9.4.1 sequencing data with guppy_6.1.2 basecalling only.\
 Note: current workflow setup has been tested on Rocky Linux 8 combined with Slurm Workload Manager.
 
 #### Get Nextflow Modules
@@ -13,6 +13,20 @@ git submodule update --init --recursive
 mkdir tools && cd tools
 curl -s https://get.nextflow.io | bash
 ```
+
+#### Configure paths before use
+ONT_wgs_all.config:
+<pre>
+  genome_fasta          full path to reference genome fasta (.fasta/.fa/.fna)
+  genome_mapping_index  full path to reference genome minimap2 index (.mmi)
+  calling_target_bed    full path to position variant calling (.bed)
+  calling_target_region region interest for variant callig based on reference genome (chr:start-stop)
+  homopolymer_bed       full path to homopolymer region of reference genome (.bed)
+  guppy_basecaller_path full path to guppy_basecaller executable
+  guppy_path            full path to guppy folder
+  runOptions            run options for singularity
+  cacheDir              singularity image cache folder
+</pre>
 
 #### Running ONT workflow
 ```bash
