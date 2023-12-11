@@ -1,6 +1,7 @@
 # NextflowONT
 Nextflow Oxford Nanopore Technologies workflow\
-Note this workflow is tested on R9.4.1 sequencing data with guppy_6.1.2 basecalling only.
+Note: this workflow hase been tested on R9.4.1 sequencing data with guppy_6.1.2 basecalling only.
+Note: current workflow setup has been tested on Rocky Linux 8 combined with Slurm Workload Manager.
 
 #### Get Nextflow Modules
 ```bash
@@ -15,7 +16,7 @@ curl -s https://get.nextflow.io | bash
 
 #### Running ONT workflow
 ```bash
-nextflow run ONT.nf -c ONT.config --input_path <input_path> --outdir <output_dir_path> --start <bam|rebase> --method <method> --email <email> [-profile slurm|mac]
+nextflow run ONT.nf -c ONT.config --input_path <input_path> --outdir <output_dir_path> --start <bam|rebase> --method <method> --email <email> [-profile slurm]
 ```
 
 ##### --input_path
