@@ -176,7 +176,8 @@ workflow {
         LongshotPhase(bam_file.map{sample_id, bam_file, bai_file -> [bam_file, bai_file]})
 
         // BAMIndex
-        Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> bam_file}.flatten())
+        Sambamba_Index_Longshot(LongshotPhase.out.map{bam_file, vcf_file -> [sample_id, bam_file]})
+
     }
 
 
