@@ -2,65 +2,69 @@
 nextflow.preview.dsl=2
 
 // Utils modules
-include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './NextflowModules/Samtools/1.15/AddReplaceReadgroup.nf'
-include { Annotate as Bedtools_Annotate_Clair3 } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Bed } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Region } from './NextflowModules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './NextflowModules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
-include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './NextflowModules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
-include { ExportParams as Workflow_ExportParams } from './NextflowModules/Utils/workflow.nf'
-include { Fastq as Samtools_Fastq } from './NextflowModules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml,MM,ML ", , roi: params.roi)
-include { FilterCondition as Sambamba_Filter_Condition } from './NextflowModules/Sambamba/1.0.0/Filter.nf' params(conditions: params.conditions)
-include { FilterHaplotypePhaseset as Sambamba_Filter_Haplotype_Phaseset } from './NextflowModules/Sambamba/1.0.0/Filter.nf'
-include { FilterPairs as Duplex_FilterPairs } from './NextflowModules/duplex_tools/0.2.17/FilterPairs.nf'
-include { FilterSamReads as PICARD_FilterSamReads } from './NextflowModules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
-include { FilterVcfs as GATK_FilterSNV_Target_Bed } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include { FilterVcfs as GATK_FilterSNV_Target_Region } from './NextflowModules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Bed } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_bed", optional:"--intervals $params.calling_target_bed --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
-include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region } from './NextflowModules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
-include { Haplotag as Whatshap_Haplotag_Target_Bed } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_bed")
-include { Haplotag as Whatshap_Haplotag_Target_Region } from './NextflowModules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
-include { Index as Sambamba_Index_Longshot } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_Deduplex } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_ReadGroup } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_Target_Bed } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_Target_Region } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { Index as Sambamba_Index_Merge } from './NextflowModules/Sambamba/1.0.0/Index.nf'
-include { LongshotPhase } from './NextflowModules/Longshot/0.4.1/Phase.nf'
-include { Mapping as Minimap2_remap } from './NextflowModules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
-include { Merge as Samtools_Merge } from './NextflowModules/Samtools/1.15/Merge.nf'
-include { MultiQC } from './NextflowModules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
-include { PairsFromSummary as Duplex_PairsFromSummary } from './NextflowModules/duplex_tools/0.2.17/PairsFromSummary.nf'
-include { Phase as Whatshap_Phase_Target_Bed } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
-include { Phase as Whatshap_Phase_Target_Region } from './NextflowModules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
-include { ViewSort as Sambamba_ViewSort_remap } from './NextflowModules/Sambamba/1.0.0/ViewSort.nf'
-include { VariantCaller as Clair3_VariantCaller } from './NextflowModules/Clair3/1.0.4--py39hf5e1c6e_3/VariantCaller.nf' params(
+include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './Modules/Samtools/1.15/AddReplaceReadgroup.nf'
+include { Annotate as Bedtools_Annotate_Clair3 } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Bed } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Region } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './Modules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
+include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './Modules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
+include { ExportParams as Workflow_ExportParams } from './Modules/Utils/workflow.nf'
+include { Fastq as Samtools_Fastq } from './Modules/Samtools/1.15/Fastq.nf' params(tags: " -T RG,Mm,Ml,MM,ML ", , roi: params.roi)
+include { FilterCondition as Sambamba_Filter_Condition } from './Modules/Sambamba/1.0.0/Filter.nf' params(conditions: params.conditions)
+include { FilterHaplotypePhaseset as Sambamba_Filter_Haplotype_Phaseset } from './Modules/Sambamba/1.0.0/Filter.nf'
+include { FilterPairs as Duplex_FilterPairs } from './Modules/duplex_tools/0.2.17/FilterPairs.nf'
+include { FilterSamReads as PICARD_FilterSamReads } from './Modules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
+include { FilterVcfs as GATK_FilterSNV_Target_Bed } from './Modules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include { FilterVcfs as GATK_FilterSNV_Target_Region } from './Modules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
+include { GetPhaseSet } from './Modules/GetPhaseSet.nf'
+include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Bed } from './Modules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_bed", optional:"--intervals $params.calling_target_bed --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region } from './Modules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
+include { Haplotag as Whatshap_Haplotag_Target_Bed } from './Modules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_bed")
+include { Haplotag as Whatshap_Haplotag_Target_Region } from './Modules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_region")
+include { Index as Sambamba_Index_Longshot } from './Modules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Deduplex } from './Modules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_ReadGroup } from './Modules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Target_Bed } from './Modules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Target_Region } from './Modules/Sambamba/1.0.0/Index.nf'
+include { Index as Sambamba_Index_Merge } from './Modules/Sambamba/1.0.0/Index.nf'
+include { LongshotPhase } from './Modules/Longshot/0.4.1/Phase.nf'
+include { Mapping as Minimap2_remap } from './Modules/Minimap2/2.26--he4a0461_1/Mapping.nf' params(optional: " -y -ax map-ont", genome_fasta: params.genome_fasta)
+include { Merge as Samtools_Merge } from './Modules/Samtools/1.15/Merge.nf'
+include { MultiQC } from './Modules/MultiQC/1.10/MultiQC.nf' params(optional: "--config $baseDir/assets/multiqc_config.yaml")
+include { PairsFromSummary as Duplex_PairsFromSummary } from './Modules/duplex_tools/0.2.17/PairsFromSummary.nf'
+include { Phase as Whatshap_Phase_Target_Bed } from './Modules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include { Phase as Whatshap_Phase_Target_Region } from './Modules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
+include { ReBasecallingGuppy } from './Modules/GuppyBasecalling.nf'
+include { ViewSort as Sambamba_ViewSort_remap } from './Modules/Sambamba/1.0.0/ViewSort.nf'
+include { VariantCaller as Clair3_VariantCaller } from './Modules/Clair3/1.0.4--py39hf5e1c6e_3/VariantCaller.nf' params(
     genome: "$params.genome_fasta",
     clair3model: "$params.clair3model",
     optional: " --haploid_precise --platform=ont --enable_long_indel"
 )
-include { VariantCaller as Sniffles2_VariantCaller } from "./NextflowModules/Sniffles2/2.2--pyhdfd78af_0/VariantCaller.nf" params(optional: "")
-include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Clair3 } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+include { VariantCaller as Sniffles2_VariantCaller } from './Modules/Sniffles2/2.2--pyhdfd78af_0/VariantCaller.nf' params(optional: "")
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Clair3 } from './Modules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.clair3_snp_filter",
     snp_cluster: "$params.clair3_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Bed } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Bed } from './Modules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './NextflowModules/GATK/4.2.1.0/VariantFiltration.nf' params(
+include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './Modules/GATK/4.2.1.0/VariantFiltration.nf' params(
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { ZipIndex as Tabix_Zip_Index_Bed } from './NextflowModules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Region } from './NextflowModules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './NextflowModules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Bed } from './NextflowModules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './NextflowModules/Tabix/1.11/Index.nf'
+include { VersionLog } from './Modules/VersionLog.nf'
+include { ZipIndex as Tabix_Zip_Index_Bed } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Region } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bedtools_Bed } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './Modules/Tabix/1.11/Index.nf'
 
 
 def analysis_id = params.outdir.split('/')[-1]
 sample_id = params.sample_id
+
 
 if (params.method == "SMA_adaptive"){
     ploidy_list = Channel.of(1..params.ploidy)
@@ -160,6 +164,7 @@ workflow {
 
     }
 
+
     // Add readgroup to BAM
     Samtools_AddReplaceReadgroup(sample_id, bam_file)
 
@@ -258,7 +263,7 @@ workflow {
 
 
         // Get correct phasegroup
-        Get_PhaseSet(GATK_VariantFiltration_Bed.out)
+        GetPhaseSet(GATK_VariantFiltration_Bed.out)
 
         // Split BAM into single haplotypes
         Sambamba_Filter_Haplotype_Phaseset(Whatshap_Haplotag_Target_Bed.out.combine(
@@ -266,7 +271,7 @@ workflow {
         ).combine(
             ploidy_list
         ).combine(
-           Get_PhaseSet.out
+           GetPhaseSet.out
         ))
 
         //Clair3 calling on haplotype BAMs
@@ -326,70 +331,3 @@ workflow.onComplete {
     }
 }
 
-// Custom processes
-process ReBasecallingGuppy{
-    // Custom process to re-basecall data with guppy
-    tag {"ReBasecallingGuppy ${sample_id}"}
-    label 'ReBasecallingGuppy'
-    shell = ['/bin/bash', '-eo', 'pipefail']
-
-    input:
-        val(input_path)
-        val(sample_id)
-        val(fast5)
-
-    output:
-        tuple(
-            path("pass/*.fastq.gz"),
-            path("workspace/fast5_pass/*.fast5"),
-            path ("*"),
-            path("pass/*.bam"),
-            path("sequencing_summary.txt")
-        )
-
-    script:
-        // adding --index will also give .bai in output. Not implemented yet.     
-        """
-        $params.guppy_basecaller_path -x "cuda:0" -c $params.guppy_path/data/$params.guppy_basecaller_config \
-        -i $input_path -s ./ $params.guppy_basecaller_params \
-        --bam_out --fast5_out --align_ref $params.genome_mapping_index 
-        """
-}
-
-process Get_PhaseSet {
-    tag { "Get_PhaseSet ${vcf_file.baseName}" }
-    label 'Get_PhaseSet'
-    container = 'quay.io/biocontainers/vcfpy:0.13.6--pyhdfd78af_0'
-    shell = ['/bin/bash', '-euo', 'pipefail']
-
-    input:
-        tuple(val(analysis_id), path(vcf_file), path(vcf_index_file))
-
-    output:
-        tuple(stdout)
-
-    script:
-        """
-        $baseDir/assets/get_phaseset.py \
-            $vcf_file \
-            $params.psv_region | tr -d '\n'
-        """
-}
-
-
-process VersionLog {
-    // Custom process to log repository versions
-    tag {"VersionLog ${analysis_id}"}
-    label 'VersionLog'
-    shell = ['/bin/bash', '-eo', 'pipefail']
-    cache = false  //Disable cache to force a new version log when restarting the workflow.
-
-    output:
-        path('repository_version.log')
-
-    script:
-        """
-        echo 'DxNextflowONT' > repository_version.log
-        git --git-dir=${workflow.projectDir}/.git log --pretty=oneline --decorate -n 2 >> repository_version.log
-        """
-}
