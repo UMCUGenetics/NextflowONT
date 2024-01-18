@@ -19,8 +19,8 @@ ONT_wgs_all.config:
 <pre>
   genome_fasta          full path to reference genome fasta (.fasta/.fa/.fna)
   genome_mapping_index  full path to reference genome minimap2 index (.mmi)
-  calling_target_bed    full path to position variant calling (.bed)
-  calling_target_region region interest for variant callig based on reference genome (chr:start-stop)
+  calling_target_bed    full path to "position specific" variant calling (.bed)
+  calling_target_region region interest for variant calling based on reference genome (chr:start-stop)
   homopolymer_bed       full path to homopolymer region of reference genome (.bed)
   guppy_basecaller_path full path to guppy_basecaller executable
   guppy_path            full path to guppy folder
