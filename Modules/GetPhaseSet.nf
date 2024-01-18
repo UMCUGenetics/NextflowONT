@@ -1,4 +1,4 @@
-process Get_PhaseSet {
+process GetPhaseSet {
     tag { "Get_PhaseSet ${vcf_file.baseName}" }
     label 'Get_PhaseSet'
     container = 'quay.io/biocontainers/vcfpy:0.13.6--pyhdfd78af_0'
