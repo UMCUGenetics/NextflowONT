@@ -16,7 +16,7 @@ include { FilterPairs as Duplex_FilterPairs } from './Modules/duplex_tools/0.2.1
 include { FilterSamReads as PICARD_FilterSamReads } from './Modules/Picard/2.26.4/FilterSamReads.nf' params(optional: " FILTER=excludeReadList")
 include { FilterVcfs as GATK_FilterSNV_Target_Bed } from './Modules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
 include { FilterVcfs as GATK_FilterSNV_Target_Region } from './Modules/GATK/4.2.1.0/FilterVCFs.nf' params(genome: params.genome_fasta, filter: "SNP")
-include { GetPhaseSet } from './Modules/GetPhaseSet.nf'
+include { GetPhaseSet } from './Modules/Utils/GetPhaseSet.nf'
 include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Bed } from './Modules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_bed", optional:"--intervals $params.calling_target_bed --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include { HaplotypeCaller_SMN as GATK_HaplotypeCaller_Region } from './Modules/GATK/4.2.1.0/HaplotypeCaller.nf' params(genome: params.genome_fasta, compress: true, extention: "_region", optional:"--intervals $params.calling_target_region --dont-use-soft-clipped-bases --pair-hmm-implementation  LOGLESS_CACHING")
 include { Haplotag as Whatshap_Haplotag_Target_Bed } from './Modules/Whatshap/1.7/Haplotag.nf' params (genome: params.genome_fasta, extention: "_bed")
@@ -34,7 +34,7 @@ include { MultiQC } from './Modules/MultiQC/1.10/MultiQC.nf' params(optional: "-
 include { PairsFromSummary as Duplex_PairsFromSummary } from './Modules/duplex_tools/0.2.17/PairsFromSummary.nf'
 include { Phase as Whatshap_Phase_Target_Bed } from './Modules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
 include { Phase as Whatshap_Phase_Target_Region } from './Modules/Whatshap/1.7/Phase.nf' params (genome: params.genome_fasta)
-include { ReBasecallingGuppy } from './Modules/GuppyBasecalling.nf'
+include { ReBasecallingGuppy } from './Modules/Utils/GuppyBasecalling.nf'
 include { ViewSort as Sambamba_ViewSort_remap } from './Modules/Sambamba/1.0.0/ViewSort.nf'
 include { VariantCaller as Clair3_VariantCaller } from './Modules/Clair3/1.0.4--py39hf5e1c6e_3/VariantCaller.nf' params(
     genome: "$params.genome_fasta",
@@ -54,7 +54,7 @@ include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './M
     genome: "$params.genome_fasta", snp_filter: "$params.gatk_snp_filter",
     snp_cluster: "$params.gatk_snp_cluster", indel_filter: "$params.gatk_indel_filter", compress: true
 )
-include { VersionLog } from './Modules/VersionLog.nf'
+include { VersionLog } from './Modules/Utils/VersionLog.nf'
 include { ZipIndex as Tabix_Zip_Index_Bed } from './Modules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Region } from './Modules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3 } from './Modules/Tabix/1.11/Index.nf'
@@ -69,6 +69,7 @@ sample_id = params.sample_id
 if (params.method == "SMA_adaptive"){
     ploidy_list = Channel.of(1..params.ploidy)
 }
+
 
 workflow {
     if( params.start == 'bam' ){
@@ -330,4 +331,3 @@ workflow.onComplete {
         sendMail(to: params.email.trim(), subject: subject, body: email_html)
     }
 }
-
