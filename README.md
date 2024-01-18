@@ -3,17 +3,6 @@ Nextflow Oxford Nanopore Technologies workflow\
 Note: this workflow hase been tested on R9.4.1 sequencing data with guppy_6.1.2 basecalling only.\
 Note: current workflow setup has been tested on Rocky Linux 8 combined with Slurm Workload Manager.
 
-#### Get Nextflow Modules
-```bash
-git submodule update --init --recursive
-```
-
-#### Install Nextflow
-```bash
-mkdir tools && cd tools
-curl -s https://get.nextflow.io | bash
-```
-
 #### Configure paths before use
 ONT_wgs_all.config:
 <pre>
