@@ -269,7 +269,6 @@ workflow {
         Sniffles2_VariantCaller_Bed(Sambamba_Filter_Haplotype_Phaseset_Bed.out)
 
 
-
        // REGION approach
        // Variant calling (REGION approach)
         GATK_HaplotypeCaller_Region(
@@ -308,7 +307,6 @@ workflow {
         // Index BAM file and publish (REGION approach)
         Sambamba_Index_Target_Region(Whatshap_Haplotag_Target_Region.out.map{bam_file -> [sample_id, bam_file]})
 
-
         // Get correct phasegroup (REGION approach)
         GetPhaseSet_Region(GATK_VariantFiltration_Region.out)
 
@@ -335,7 +333,6 @@ workflow {
 
         //Sniffles SV variant calling on haplotype BAMs (REGION approach)
         Sniffles2_VariantCaller_Region(Sambamba_Filter_Haplotype_Phaseset_Region.out)
-
     }
 
     // QC stats
