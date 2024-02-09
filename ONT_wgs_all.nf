@@ -3,10 +3,10 @@ nextflow.preview.dsl=2
 
 // Utils modules
 include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './Modules/Samtools/1.15/AddReplaceReadgroup.nf'
-include { Annotate as Bedtools_Annotate_Clair3_Bed } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Clair3_Region } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Bed } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Region } from './Modules/bedtools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Clair3_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Clair3_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bedtools_Annotate_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
 include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './Modules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './Modules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
 include { ExportParams as Workflow_ExportParams } from './Modules/Utils/workflow.nf'
@@ -88,7 +88,6 @@ if (params.method == "SMA_adaptive"){
 workflow {
     if( params.start == 'bam' ){
         // Get fast5 and mapped bams from input folder
-        fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
         bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
         summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
     }
@@ -106,7 +105,6 @@ workflow {
     }
     else if( params.start == 'bam_remap' ){
         // Get fast5 and mapped bams from input folder
-        fast5_files = Channel.fromPath(params.input_path +  "/workspace/fast5_pass/*.fast5").toList()
         bam_files = Channel.fromPath(params.input_path +  "/pass/*.bam").toList()
         summary_file = Channel.fromPath(params.input_path +  "/sequencing_summary.txt").toList()
     }
