@@ -1,6 +1,6 @@
 process Annotate {
-    tag {"bedtools ${vcf_file}"}
-    label 'bedtools_1_15_1'
+    tag {"bcftools ${vcf_file}"}
+    label 'bcftools_1_15_1'
     container = 'quay.io/biocontainers/bcftools:1.15.1--h0ea216a_0'
     shell = ['/bin/bash', '-euo', 'pipefail']
 
