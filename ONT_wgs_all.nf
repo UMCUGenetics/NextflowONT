@@ -3,10 +3,10 @@ nextflow.preview.dsl=2
 
 // Utils modules
 include { AddReplaceReadgroup as Samtools_AddReplaceReadgroup } from './Modules/Samtools/1.15/AddReplaceReadgroup.nf'
-include { Annotate as Bedtools_Annotate_Clair3_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Clair3_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
-include { Annotate as Bedtools_Annotate_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bcftools_Annotate_Clair3_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bcftools_Annotate_Clair3_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bcftools_Annotate_Bed } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
+include { Annotate as Bcftools_Annotate_Region } from './Modules/bcftools/1.15.1--h0ea216a_0/Annotate.nf'
 include { CollectMultipleMetrics as PICARD_CollectMultipleMetrics } from './Modules/Picard/2.26.4/CollectMultipleMetrics.nf' params(genome:"$params.genome_fasta", optional: "PROGRAM=null PROGRAM=CollectAlignmentSummaryMetrics METRIC_ACCUMULATION_LEVEL=null METRIC_ACCUMULATION_LEVEL=SAMPLE")
 include { CollectWgsMetrics as PICARD_CollectWgsMetrics } from './Modules/Picard/2.26.4/CollectWgsMetrics.nf' params(genome:"$params.genome_fasta", optional: "MINIMUM_MAPPING_QUALITY=1 MINIMUM_BASE_QUALITY=1 ")
 include { ExportParams as Workflow_ExportParams } from './Modules/Utils/workflow.nf'
@@ -70,10 +70,10 @@ include { VariantFiltrationSnpIndel as GATK_VariantFiltration_Region } from './M
 include { VersionLog } from './Modules/Utils/VersionLog.nf'
 include { ZipIndex as Tabix_Zip_Index_Bed } from './Modules/Tabix/1.11/Index.nf'
 include { ZipIndex as Tabix_Zip_Index_Region } from './Modules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3_Bed } from './Modules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Clair3_Region } from './Modules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Bed } from './Modules/Tabix/1.11/Index.nf'
-include { ZipIndex as Tabix_Zip_Index_Bedtools_Region } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bcftools_Clair3_Bed } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bcftools_Clair3_Region } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bcftools_Bed } from './Modules/Tabix/1.11/Index.nf'
+include { ZipIndex as Tabix_Zip_Index_Bcftools_Region } from './Modules/Tabix/1.11/Index.nf'
 
 
 def analysis_id = params.outdir.split('/')[-1]
@@ -219,15 +219,15 @@ workflow {
         )
 
         //Annotate Homopolymer VCF (BED approach)
-        Bedtools_Annotate_Bed(
+        Bcftools_Annotate_Bed(
             Tabix_Zip_Index_Bed.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
         )
 
         //Index Homopolymer annotated VCF file (BED approach)
-        Tabix_Zip_Index_Bedtools_Bed(Bedtools_Annotate_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
+        Tabix_Zip_Index_Bcftools_Bed(Bcftools_Annotate_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF (BED approach)
-        GATK_VariantFiltration_Bed(Tabix_Zip_Index_Bedtools_Bed.out)
+        GATK_VariantFiltration_Bed(Tabix_Zip_Index_Bcftools_Bed.out)
 
         // Whatshapp haplotag (BED approach)
         Whatshap_Haplotag_Target_Bed(
@@ -235,6 +235,7 @@ workflow {
             .map{sample_id, bam_file, bai_file, vcf_file, vcf_index, ploidy -> [sample_id, bam_file, bai_file, ploidy]}
             .join(GATK_VariantFiltration_Bed.out)
         )
+
 
         // Index BAM file and publish (BED approach)
         Sambamba_Index_Target_Bed(Whatshap_Haplotag_Target_Bed.out.map{bam_file -> [sample_id, bam_file]})
@@ -255,16 +256,18 @@ workflow {
         Clair3_VariantCaller_Bed(Sambamba_Filter_Haplotype_Phaseset_Bed.out)
 
         // Annotate Clair3 VCF (BED approach)
-        Bedtools_Annotate_Clair3_Bed(Clair3_VariantCaller_Bed.out)
+        Bcftools_Annotate_Clair3_Bed(Clair3_VariantCaller_Bed.out)
 
         //Index Homopolymer annotated VCF file (BED approach)
-        Tabix_Zip_Index_Bedtools_Clair3_Bed(Bedtools_Annotate_Clair3_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
+        Tabix_Zip_Index_Bcftools_Clair3_Bed(Bcftools_Annotate_Clair3_Bed.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF (BED approach)
-        GATK_VariantFiltration_Clair3_Bed(Tabix_Zip_Index_Bedtools_Clair3_Bed.out)
+        GATK_VariantFiltration_Clair3_Bed(Tabix_Zip_Index_Bcftools_Clair3_Bed.out)
 
         //Sniffles SV variant calling on haplotype BAMs (BED approach)
         Sniffles2_VariantCaller_Bed(Sambamba_Filter_Haplotype_Phaseset_Bed.out)
+
+
 
 
        // REGION approach
@@ -285,15 +288,15 @@ workflow {
         )
 
         //Annotate Homopolymer VCF (REGION approach)
-        Bedtools_Annotate_Region(
+        Bcftools_Annotate_Region(
             Tabix_Zip_Index_Region.out.map{sample_id, vcf_file, vcf_file_index -> [vcf_file, vcf_file_index]}
         )
 
         //Index Homopolymer annotated VCF file (REGION approach)
-        Tabix_Zip_Index_Bedtools_Region(Bedtools_Annotate_Region.out.map{vcf_file -> [sample_id, vcf_file]})
+        Tabix_Zip_Index_Bcftools_Region(Bcftools_Annotate_Region.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF (REGION approach)
-        GATK_VariantFiltration_Region(Tabix_Zip_Index_Bedtools_Region.out)
+        GATK_VariantFiltration_Region(Tabix_Zip_Index_Bcftools_Region.out)
 
         // Whatshapp haplotag (REGION approach)
         Whatshap_Haplotag_Target_Region(
@@ -321,13 +324,13 @@ workflow {
         Clair3_VariantCaller_Region(Sambamba_Filter_Haplotype_Phaseset_Region.out)
 
         // Annotate Clair3 VCF (REGION approach)
-        Bedtools_Annotate_Clair3_Region(Clair3_VariantCaller_Region.out)
+        Bcftools_Annotate_Clair3_Region(Clair3_VariantCaller_Region.out)
 
         //Index Homopolymer annotated VCF file (REGION approach)
-        Tabix_Zip_Index_Bedtools_Clair3_Region(Bedtools_Annotate_Clair3_Region.out.map{vcf_file -> [sample_id, vcf_file]})
+        Tabix_Zip_Index_Bcftools_Clair3_Region(Bcftools_Annotate_Clair3_Region.out.map{vcf_file -> [sample_id, vcf_file]})
 
         //Filter VCF (REGION approach)
-        GATK_VariantFiltration_Clair3_Region(Tabix_Zip_Index_Bedtools_Clair3_Region.out)
+        GATK_VariantFiltration_Clair3_Region(Tabix_Zip_Index_Bcftools_Clair3_Region.out)
 
         //Sniffles SV variant calling on haplotype BAMs (REGION approach)
         Sniffles2_VariantCaller_Region(Sambamba_Filter_Haplotype_Phaseset_Region.out)
