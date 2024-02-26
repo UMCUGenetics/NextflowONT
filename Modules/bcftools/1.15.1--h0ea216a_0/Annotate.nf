@@ -1,6 +1,7 @@
 process Annotate {
     tag {"bcftools ${vcf_file}"}
     label 'bcftools_1_15_1'
+    label 'bcftools_1_15_1_Annotate'
     container = 'quay.io/biocontainers/bcftools:1.15.1--h0ea216a_0'
     shell = ['/bin/bash', '-euo', 'pipefail']
 
