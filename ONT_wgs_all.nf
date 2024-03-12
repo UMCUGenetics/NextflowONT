@@ -236,7 +236,6 @@ workflow {
             .join(GATK_VariantFiltration_Bed.out)
         )
 
-
         // Index BAM file and publish (BED approach)
         Sambamba_Index_Target_Bed(Whatshap_Haplotag_Target_Bed.out.map{bam_file -> [sample_id, bam_file]})
 
@@ -266,7 +265,6 @@ workflow {
 
         //Sniffles SV variant calling on haplotype BAMs (BED approach)
         Sniffles2_VariantCaller_Bed(Sambamba_Filter_Haplotype_Phaseset_Bed.out)
-
 
 
 
